@@ -1,0 +1,2 @@
+-r requirements.txt
+# Use the existing ORT main CUDA build; do not replace it with a CPU wheel.
