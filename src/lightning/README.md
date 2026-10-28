@@ -41,6 +41,12 @@ from Bolt's `MambaConvKernel`, `MambaSsmKernel`, and `MambaNormKernel`.
 Other positive state/head dimensions and convolution widths have scalar-safe
 fallbacks with the same recurrence; the state reduction order may differ.
 
+Before gating, Lightning rounds the FP32 SSM readout to BF16, then converts it
+back to FP32 for multiplication by SiLU and the grouped RMS calculation.
+Both normalization passes apply this rounding; the returned `ypre` scratch
+tensor remains the original unrounded FP32 readout. Thus
+`v = float(bf16(ypre)) * silu(float(gate))` in the formulas below.
+
 **Intentional numerical difference from actual Bolt code:** Bolt computes
 `bf16(v * rsqrt(mean(v*v)+epsilon) * norm_w)` with FP32 `v`, inverse RMS, and
 norm weights, rounding only the final result. Lightning instead computes

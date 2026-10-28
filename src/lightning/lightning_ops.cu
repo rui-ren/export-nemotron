@@ -165,14 +165,14 @@ __global__ void MambaSsmGenericKernel(const bf16* proj, int di, int channels, in
   ypre[feature] = skip[h] * x + acc;
 }
 
-// Bolt's grouped gate/RMS reduction; Lightning adds BF16 rounding before FLOAT norm_w multiplication.
+// Lightning rounds the SSM readout before gating, and normalized values before norm_w multiplication.
 __global__ void MambaNormKernel(const bf16* proj, int group_size, float eps, const float* ypre,
                                const float* norm_w, bf16* y) {
   const int64_t base = static_cast<int64_t>(blockIdx.x) * group_size;
   __shared__ float red[8];
   float ss = 0.f;
   for (int i = threadIdx.x; i < group_size; i += blockDim.x) {
-    const float v = ypre[base + i] * Silu(B2F(proj[base + i]));
+    const float v = RoundBF(ypre[base + i]) * Silu(B2F(proj[base + i]));
     ss += v * v;
   }
   for (int o = 16; o > 0; o >>= 1) ss += __shfl_down_sync(0xffffffff, ss, o);
@@ -186,7 +186,7 @@ __global__ void MambaNormKernel(const bf16* proj, int group_size, float eps, con
   __syncthreads();
   const float rs = rsqrtf(red[0] / group_size + eps);
   for (int i = threadIdx.x; i < group_size; i += blockDim.x) {
-    const float v = ypre[base + i] * Silu(B2F(proj[base + i]));
+    const float v = RoundBF(ypre[base + i]) * Silu(B2F(proj[base + i]));
     y[base + i] = __float2bfloat16(RoundBF(v * rs) * norm_w[base + i]);
   }
 }

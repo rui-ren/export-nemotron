@@ -73,6 +73,7 @@ export LIGHTNING_OPS=/tmp/lightning-build/lib/liblightning_ops.so
 # These diagnostic tests may run in your H100 environment, without creating
 # a separate CPU environment. They require the existing ORT Python package.
 python -m unittest discover -s tests -p test_export.py -v
+python -m unittest discover -s tests -p test_kernel_contract.py -v
 python -m unittest discover -s tests -p test_gpu.py -v
 python -m unittest discover -s tests -p test_gpu_ops.py -v
 ```

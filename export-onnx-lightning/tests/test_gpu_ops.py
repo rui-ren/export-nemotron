@@ -95,7 +95,7 @@ class KernelTests(unittest.TestCase):
                   ([1, channels, kernel - 1], onnx.TensorProto.BFLOAT16),
                   ([1, heads, states, dim], FLOAT),
                   ([1, channels], onnx.TensorProto.BFLOAT16),
-                  ([1, inner], onnx.TensorProto.BFLOAT16)]
+                  ([1, inner], FLOAT)]
         session = self.session("MambaStep", tensors, shapes,
                                {"heads": heads, "head_dim": dim, "d_state": states,
                                 "n_groups": groups, "epsilon": 1e-5, "time_step_min": 0.0})
@@ -106,10 +106,40 @@ class KernelTests(unittest.TestCase):
             inputs[1], inputs[2] = reference_conv, reference_ssm
             expected = mamba_core(*inputs, heads, dim, states, groups, 1e-5, 0.0)
             actual = run_cuda(session, tensors)
+            self.assertEqual(actual["output4"].dtype, torch.float32)
             for index in range(3):
                 torch.testing.assert_close(actual[f"output{index}"], expected[index], atol=0.012, rtol=0.025)
             tensors["past_conv"], tensors["past_ssm"] = actual["output1"], actual["output2"]
             reference_conv, reference_ssm = expected[1], expected[2]
+
+    def test_mamba_rounds_readout_before_gating_and_rms(self):
+        tensors = {
+            "projection": torch.tensor([[1, -1, 0, 0, 0, 0, 0]], dtype=torch.bfloat16, device="cuda"),
+            "past_conv": torch.zeros((1, 4, 1), dtype=torch.bfloat16, device="cuda"),
+            "past_ssm": torch.tensor([[[[1.003, 0.331]]]], dtype=torch.float32, device="cuda"),
+            "conv_w": torch.zeros((4, 1, 2), dtype=torch.bfloat16, device="cuda"),
+            "conv_b": torch.tensor([0, 0, 0, 1], dtype=torch.bfloat16, device="cuda"),
+            "dt_bias": torch.zeros(1, dtype=torch.float32, device="cuda"),
+            "a": torch.zeros(1, dtype=torch.float32, device="cuda"),
+            "skip": torch.zeros(1, dtype=torch.float32, device="cuda"),
+            "norm": torch.tensor([1.25, 0.75], dtype=torch.float32, device="cuda"),
+        }
+        shapes = [([1, 2], onnx.TensorProto.BFLOAT16),
+                  ([1, 4, 1], onnx.TensorProto.BFLOAT16),
+                  ([1, 1, 1, 2], FLOAT),
+                  ([1, 4], onnx.TensorProto.BFLOAT16),
+                  ([1, 2], FLOAT)]
+        session = self.session("MambaStep", tensors, shapes,
+                               {"heads": 1, "head_dim": 2, "d_state": 1, "n_groups": 1,
+                                "epsilon": 1e-5, "time_step_min": 0.0})
+        actual = run_cuda(session, tensors)
+        expected = mamba_core(*tensors.values(), 1, 2, 1, 1, 1e-5, 0.0)
+        # Either unrounded normalization pass changes at least one BF16 result.
+        rounded = torch.tensor([[1.7578125, -0.126953125]], dtype=torch.bfloat16, device="cuda")
+        torch.testing.assert_close(expected[0], rounded, atol=0, rtol=0)
+        torch.testing.assert_close(actual["output0"], rounded, atol=0, rtol=0)
+        self.assertEqual(actual["output4"].dtype, torch.float32)
+        self.assertFalse(torch.equal(actual["output4"], actual["output4"].bfloat16().float()))
 
     def test_experts_real_dimensions_bf16_and_w4(self):
         for hidden, intermediate in ((2688, 1856), (131, 67)):
