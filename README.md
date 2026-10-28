@@ -4,6 +4,21 @@ CUDA custom-op library for **NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB** (Mamba2 + a
 ONNX Runtime's CUDA EP. Same layout as `qwen38-flash-ops`: plain ORT custom-op ABI, `sm_90`, ops run on the provider's compute
 stream (CUDA-graph capturable), one shared library, domain `bolt`.
 
+## Nemotron ONNX exporter
+
+See [export-onnx-bolt/README.md](export-onnx-bolt/README.md) for a standalone rewrite that
+separates checkpoint reading, quantization, external weight storage, graph
+helpers and model construction. It exports the Nemotron Bolt text backbone
+as `model.onnx` with external weights in `model.onnx.data`.
+The original exporter scripts are unchanged.
+
+For the safetensors Lightning model, see
+[export-onnx-lightning/README.md](export-onnx-lightning/README.md).
+Its standard BF16, Bolt-style custom BF16, W4A16 and MTP versions have separate
+entry-point folders and share the checkpoint/graph helpers.
+Lightning CUDA sources and their standalone build live in
+[src/lightning](src/lightning/README.md).
+
 Build:
 
 ```bash
@@ -30,7 +45,8 @@ BOLT_PLUGIN=<libonnxruntime_providers_cuda.so of the CUDA plugin EP> BOLT_OPS=bu
 | `MoeVerify` | `MoeDecode` for R <= 8 rows (speculative verification): (token, expert) pairs are grouped by expert, each unique expert's int4 weights are read once and applied to all rows with tensor-core MMAs | as `MoeDecode` + an int32 scratch output (expert groups) |
 | `Relu2` | `Relu` + `Mul` | x -> bf16(relu(x)^2) |
 
-All numerics follow the bf16/fp32 rounding points of the ONNX chains they replace (see the header of `src/bolt_ops.cu`).
+All numerics follow the bf16/fp32 rounding points of the ONNX chains they replace
+(see the header of [src/bolt/bolt_ops.cu](src/bolt/bolt_ops.cu)).
 
 ## Multi-row (speculative verify) path
 

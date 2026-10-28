@@ -1,0 +1,6 @@
+numpy
+onnx>=1.16
+torch>=2.4
+safetensors
+# IQ2_XXS quantization codebooks for Bolt safetensors, not GGUF file loading.
+gguf
