@@ -3,6 +3,9 @@
 Source model: `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16`.
 Input is the complete, locally downloaded **safetensors checkpoint**, not GGUF.
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for source-backed code relationship
+diagrams of the exporters and custom-kernel bindings.
+
 | Folder | What you learn | Graph |
 | --- | --- | --- |
 | [01-standard](01-standard/README.md) | Explicit BF16 math and cache updates | Standard ONNX, with optional ORT GQA |
