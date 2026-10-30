@@ -1,0 +1,12 @@
+This archive includes original Bolt kernels from rui-ren/nemotron_ops,
+distributed under the repository's MIT license, and IQ2 codebook tables
+with their retained ggml attribution.
+
+The embedded Mamba kernel images are generated derivatives of
+state-spaces/mamba's Triton kernels, licensed under Apache-2.0.
+The historical implementation adds CUDA launch wrappers, explicit rounding
+boundaries, source-profile selection and a coalesced cached-state path.
+The original license is reproduced in licenses/mamba-LICENSE.
+
+The archived sources are preserved byte-for-byte. The rebuild wrapper
+relocates local include paths only in generated build-stage copies.
