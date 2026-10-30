@@ -16,8 +16,10 @@ ONNX models, runtime binaries or changes to the existing Bolt build are included
 | `CMakeLists.txt` | Independent H100/sm90 shared-library build |
 | `test_smoke.py` | Standalone GPU registration, dense projection and expert-path checks |
 
-The three CUDA files are byte-identical to the locally qualified implementation;
-their hashes are in `SOURCE_SHA256SUMS`.
+The original snapshot matched the locally qualified implementation. Subsequent
+review fixes validate attention lengths before subtraction, return cohort
+activations in token/route order and preserve verification shape fallbacks.
+Current source hashes are in `SOURCE_SHA256SUMS`.
 The shared registration source also retains legacy `W4Linear`/`MoeDecode`
 entry points for compatibility. **The BF16 paths do not call those quantized
 operators or quantize any weights.**
@@ -78,6 +80,9 @@ Batch size is one. Verification rows are consecutive tokens, not independent
 requests. Other supported dimensions/row counts retain the existing fallback
 paths. Valid, unique expert IDs are required; device-path bounds guards do not
 provide the diagnostic path's synchronous host-validation guarantee.
+Multi-row expert activation output is `[T*topk,I]` in token/route order,
+matching indices and the `[T,topk,H]` contribution output. Expert/cohort packing
+is internal scratch, not the public activation layout.
 
 FC1 retains two contiguous split-K partitions, BF16 projection/ReLU-squared
 rounding and ascending MMA order; FC2 retains its source rounding. Finalization
@@ -122,3 +127,7 @@ python -m unittest discover -s bf16_cuda_lightning -p test_smoke.py -v
 
 These smoke tests fail, rather than silently skip, when CUDA or the library is
 missing. They do not download weights or replace the full numerical gates.
+They include unequal-size shared-expert cohorts, all three expert outputs,
+non-specialized two-row fallback, and invalid/edge attention lengths.
+Historical full-model measurements above precede these review fixes; the
+review fixes have focused GPU regression coverage, not new performance claims.

@@ -39,6 +39,11 @@ class CudaSmokeTests(unittest.TestCase):
                 "device_id": "0", "user_compute_stream": str(torch.cuda.current_stream().cuda_stream)})])
         binding, keepalive = session.io_binding(), []
         for name, tensor in feeds.items():
+            if tensor.device.type == "cpu":
+                value = tensor.contiguous().numpy()
+                keepalive.append(value)
+                binding.bind_cpu_input(name, value)
+                continue
             value = ort.OrtValue.from_dlpack(tensor.contiguous().__dlpack__())
             keepalive.append(value)
             binding.bind_ortvalue_input(name, value)
@@ -86,6 +91,71 @@ class CudaSmokeTests(unittest.TestCase):
         expected.append(torch.stack([row[2] for row in reference]))
         for left, right in zip(actual, expected):
             torch.testing.assert_close(left, right, atol=0, rtol=0)
+
+    def compare_expert_rows(self, intermediate, indices, operations):
+        rows, routes = len(indices), 6
+        hidden, experts = 2688, 10
+        x = (torch.randn(rows, hidden, device="cuda") * 0.1).bfloat16()
+        up = (torch.randn(experts, intermediate, hidden, device="cuda") * 0.1).bfloat16()
+        down = (torch.randn(experts, hidden, intermediate, device="cuda") * 0.1).bfloat16()
+        indices = torch.tensor(indices, dtype=torch.int32, device="cuda")
+        probs = torch.rand(rows, routes, device="cuda")
+        probs /= probs.sum(-1, keepdim=True)
+        reference = []
+        for row in range(rows):
+            reference.append(self.run_op(
+                "MoeDecodeBF16",
+                {"x": x[row:row + 1], "idx": indices[row:row + 1],
+                 "probs": probs[row:row + 1], "up": up, "down": down},
+                [([1, hidden], torch.bfloat16), ([routes, intermediate], torch.bfloat16),
+                 ([routes, hidden], torch.float32)], topk=routes, source_order=1))
+        expected = [torch.cat([row[i] for row in reference]) for i in (0, 1)]
+        expected.append(torch.stack([row[2] for row in reference]))
+        for operation in operations:
+            with self.subTest(operation=operation, intermediate=intermediate):
+                actual = self.run_op(
+                    operation, {"x": x, "idx": indices, "probs": probs, "up": up, "down": down},
+                    [([rows, hidden], torch.bfloat16),
+                     ([rows * routes, intermediate], torch.bfloat16),
+                     ([rows, routes, hidden], torch.float32)], topk=routes, source_order=1)
+                for left, right in zip(actual, expected):
+                    torch.testing.assert_close(left, right, atol=0, rtol=0)
+
+    def test_cohort_prefill_preserves_all_route_outputs(self):
+        self.compare_expert_rows(
+            1856, [[7, 0, 3, 5, 1, 6], [2, 7, 0, 4, 6, 3], [8, 7, 0, 4, 6, 3]],
+            ("MoeChunkBF16", "MoeCohortBF16", "MoeDeviceBF16", "MoeVerifyBF16"))
+
+    def test_two_row_verification_falls_back_for_other_intermediate(self):
+        self.compare_expert_rows(
+            1024, [[7, 0, 3, 5, 1, 6], [2, 7, 0, 4, 6, 3]], ("MoeVerifyBF16",))
+
+    def test_attention_rejects_invalid_lengths_before_subtraction(self):
+        rows, capacity = 2, 4
+        feeds = {
+            "q": torch.zeros(1, rows, 4096, dtype=torch.bfloat16, device="cuda"),
+            "k": torch.zeros(1, rows, 256, dtype=torch.bfloat16, device="cuda"),
+            "v": torch.zeros(1, rows, 256, dtype=torch.bfloat16, device="cuda"),
+            "pk": torch.zeros(1, 2, capacity, 128, dtype=torch.bfloat16, device="cuda"),
+            "pv": torch.zeros(1, 2, capacity, 128, dtype=torch.bfloat16, device="cuda"),
+            "position": torch.tensor([0], dtype=torch.int32, device="cuda"),
+        }
+        shapes = [([1, rows, 4096], torch.bfloat16),
+                  ([1, 2, capacity, 128], torch.bfloat16),
+                  ([1, 2, capacity, 128], torch.bfloat16)]
+        for total in (-(2**31), -1, 0, rows - 1, capacity + 1, 2**31 - 1):
+            with self.subTest(total=total):
+                feeds["total"] = torch.tensor([total], dtype=torch.int32)
+                with self.assertRaisesRegex(RuntimeError,
+                                            "cache capacity exceeded"):
+                    self.run_op("CachedAttentionChunk", feeds, shapes,
+                                num_heads=32, kv_num_heads=2, do_rotary=0)
+        for total in (rows, capacity):
+            feeds["total"] = torch.tensor([total], dtype=torch.int32)
+            actual = self.run_op("CachedAttentionChunk", feeds, shapes,
+                                 num_heads=32, kv_num_heads=2, do_rotary=0)
+            for value in actual:
+                self.assertTrue(torch.isfinite(value).all().item())
 
 
 if __name__ == "__main__":

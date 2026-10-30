@@ -95,8 +95,9 @@ struct CachedAttentionChunkState {
         CheckTensor(c, i, cache_shape, BF, "CachedAttentionChunk: invalid cache");
       CheckTensor(c, 5, {1}, I32, "CachedAttentionChunk: invalid GPU lengths");
       CheckTensor(c, 6, {1}, I32, "CachedAttentionChunk: total length must be CPU INT32[1]");
-      const int total = In<int32_t>(c, 6)[0], start = total - rows;
-      Require(start >= 0 && total <= capacity, "CachedAttentionChunk: cache capacity exceeded");
+      const int total = In<int32_t>(c, 6)[0];
+      Require(total >= rows && total <= capacity, "CachedAttentionChunk: cache capacity exceeded");
+      const int start = total - rows;
       auto y = c.GetOutput(0, qs);
       auto key = c.GetOutput(1, cache_shape), value = c.GetOutput(2, cache_shape);
       const auto stream = Stream(api, raw);
@@ -379,6 +380,16 @@ __global__ void ExpertOffsetsKernel(const int* counts, int experts, int* offsets
   offsets[e] = sum;
 }
 
+__global__ void ExpertScatterActivationKernel(
+    const bf16* packed, const int32_t* indices, const int* ranks, const int* offsets,
+    int routes, int intermediate, bf16* activated) {
+  const int64_t i = static_cast<int64_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+  if (i >= static_cast<int64_t>(routes) * intermediate) return;
+  const int route = i / intermediate, column = i % intermediate;
+  const int slot = offsets[indices[route]] + ranks[route];
+  activated[i] = packed[static_cast<int64_t>(slot) * intermediate + column];
+}
+
 __global__ void ExpertFinalizeChunkKernel(const bf16* down, const int32_t* indices,
                                          const float* probs, const int* ranks, const int* offsets,
                                          int rows, int topk, int hidden, bf16* y, float* part) {
@@ -515,6 +526,8 @@ struct MoeChunkState : MoeDecodeState<false> {
       ExpertOffsetsKernel<<<CeilDiv(experts, 128), 128, 0, s>>>(counts, experts, offsets);
       AsyncBuffer packed(static_cast<size_t>(total) * hidden * 2 * sizeof(bf16), s);
       auto input = static_cast<bf16*>(packed.data), down = input + static_cast<int64_t>(total) * hidden;
+      AsyncBuffer activation(static_cast<size_t>(total) * intermediate * sizeof(bf16), s);
+      auto activated = static_cast<bf16*>(activation.data);
       ExpertGatherChunkKernel<<<CeilDiv(total * hidden, 256), 256, 0, s>>>(
           In<bf16>(c, 0), In<int32_t>(c, 1), ranks, offsets, rows, topk, hidden, input);
       const bool use_cohorts = cohort_gemm && hidden == 2688 && intermediate == 1856;
@@ -539,7 +552,7 @@ struct MoeChunkState : MoeDecodeState<false> {
         if (use_cohorts && host_counts[e] > 1) {
           up_plan->Run(In<bf16>(c, 3) + static_cast<int64_t>(e) * intermediate * hidden,
                        input + static_cast<int64_t>(host_offsets[e]) * hidden,
-                       Out<bf16>(h) + static_cast<int64_t>(host_offsets[e]) * intermediate,
+                       activated + static_cast<int64_t>(host_offsets[e]) * intermediate,
                        host_counts[e], workspace ? workspace->data : nullptr, workspace_bytes, s);
           continue;
         }
@@ -548,14 +561,14 @@ struct MoeChunkState : MoeDecodeState<false> {
             blas, CUBLAS_OP_T, CUBLAS_OP_N, intermediate, 1, hidden, &alpha,
             In<bf16>(c, 3) + static_cast<int64_t>(e) * intermediate * hidden, CUDA_R_16BF, hidden,
             input + static_cast<int64_t>(host_offsets[e] + row) * hidden, CUDA_R_16BF, hidden, &beta,
-            Out<bf16>(h) + static_cast<int64_t>(host_offsets[e] + row) * intermediate, CUDA_R_16BF, intermediate,
+            activated + static_cast<int64_t>(host_offsets[e] + row) * intermediate, CUDA_R_16BF, intermediate,
             CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
       }
-      ReluSquaredKernel<<<CeilDiv(total * intermediate, 256), 256, 0, s>>>(Out<bf16>(h), total * intermediate);
+      ReluSquaredKernel<<<CeilDiv(total * intermediate, 256), 256, 0, s>>>(activated, total * intermediate);
       for (int e = 0; e < experts; ++e) {
         if (use_cohorts && host_counts[e] > 1) {
           down_plan->Run(In<bf16>(c, 4) + static_cast<int64_t>(e) * intermediate * hidden,
-                         Out<bf16>(h) + static_cast<int64_t>(host_offsets[e]) * intermediate,
+                         activated + static_cast<int64_t>(host_offsets[e]) * intermediate,
                          down + static_cast<int64_t>(host_offsets[e]) * hidden,
                          host_counts[e], workspace ? workspace->data : nullptr, workspace_bytes, s);
           continue;
@@ -564,10 +577,12 @@ struct MoeChunkState : MoeDecodeState<false> {
         CheckBlas(cublasGemmEx(
             blas, CUBLAS_OP_T, CUBLAS_OP_N, hidden, 1, intermediate, &alpha,
             In<bf16>(c, 4) + static_cast<int64_t>(e) * intermediate * hidden, CUDA_R_16BF, intermediate,
-            Out<bf16>(h) + static_cast<int64_t>(host_offsets[e] + row) * intermediate, CUDA_R_16BF, intermediate, &beta,
+            activated + static_cast<int64_t>(host_offsets[e] + row) * intermediate, CUDA_R_16BF, intermediate, &beta,
             down + static_cast<int64_t>(host_offsets[e] + row) * hidden, CUDA_R_16BF, hidden,
             CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
       }
+      ExpertScatterActivationKernel<<<CeilDiv(total * intermediate, 256), 256, 0, s>>>(
+          activated, In<int32_t>(c, 1), ranks, offsets, total, intermediate, Out<bf16>(h));
       ExpertFinalizeChunkKernel<<<CeilDiv(rows * hidden, 256), 256, 0, s>>>(
           down, In<int32_t>(c, 1), In<float>(c, 2), ranks, offsets, rows, topk, hidden,
           Out<bf16>(y), Out<float>(part));
@@ -605,11 +620,11 @@ struct MoeVerifyState : MoeDeviceState {
     try {
       Ort::KernelContext c(raw);
       const auto xs = Dimensions(c.GetInput(0));
-      if (xs != Shape{2, 2688}) return MoeDeviceState::ComputeV2(raw);
       CheckArity(c, 5, 3);
-      Require(source_order && topk == 6, "MoeVerify: requires source-ordered six-expert routing");
       const auto ws = Dimensions(c.GetInput(3));
-      Require(ws.size() == 3 && ws[1] == 1856 && ws[2] == 2688, "MoeVerify: invalid up weights");
+      if (xs != Shape{2, 2688} || ws.size() != 3 || ws[1] != 1856 || ws[2] != 2688)
+        return MoeDeviceState::ComputeV2(raw);
+      Require(source_order && topk == 6, "MoeVerify: requires source-ordered six-expert routing");
       const int experts = PositiveInt(ws[0], "MoeVerify: invalid experts");
       Require(experts >= 6, "MoeVerify: requires at least six experts");
       CheckTensor(c, 0, xs, BF, "MoeVerify: invalid activation");
