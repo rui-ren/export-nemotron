@@ -1,0 +1,249 @@
+{
+  "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+  "checkpoint_revision": "a9904d24bcc1d289a1950fa9d2b978c47cf903b9",
+  "checkpoint_config_sha256": "a3827a0f5e311547b40943dc081e3ff2f8a277466e8c1a3df2291e8db8a7617c",
+  "checkpoint_index_sha256": "67f21da80ce245a3e24967f54eef3fa10e67a63eba16ef19a2d0569f06103f50",
+  "llama_cpp_revision": "5047748f114564fcf271e6a648f60e2d2eae6264",
+  "preset": "Q4_K_M",
+  "mtp": false,
+  "importance_matrix": null,
+  "onnx_runtime_ready": false,
+  "bf16_source": {
+    "bytes": 63181503680,
+    "sha256": "429af54238372d59ff3cc111143452ffb00e537308136a0e3a38368feb80e4cf"
+  },
+  "quantized": {
+    "bytes": 24515129024,
+    "gb": 24.515129024,
+    "gib": 22.831493079662323,
+    "sha256": "6a5b8b5ca7691e59a896407be56f73fd28aedd32c0f85087d68d811f4f6f7ea5"
+  },
+  "tensor_types": {
+    "Q8_0": 25,
+    "F32": 237,
+    "Q5_0": 110,
+    "Q4_K": 29
+  },
+  "tensor_type_bytes": {
+    "Q8_0": 7955856384,
+    "F32": 35456256,
+    "Q5_0": 16336320000,
+    "Q4_K": 179601408
+  },
+  "shape_fallback_tensor_count": 134,
+  "effective_weight_bits": 6.208697292980327,
+  "source_tensors_checked": 6243,
+  "gguf_tensors_checked": 401,
+  "retained_tensors_bytewise_checked": 237,
+  "all_values_finite": true,
+  "tensor_inventory_and_shapes_preserved": true,
+  "source_context_length": 262144,
+  "gguf_declared_context_length": 1048576,
+  "probe_context_length": 2048,
+  "probe_sha256": "803717dd059c305dd707688bb7f16fbfe8f94b9e215b1cb090c9f3d431789a26",
+  "hf_reference_sha256": "c8e5c36703ba4a9bf84deae77e698ec3c71d2aa9388c129d919449ecfe38b1c1",
+  "prompts_sha256": "1261850659bead0461e3f6793fb85f7253a687b9237f3cca0967dc2bfdea32d0",
+  "runs": {
+    "bf16": {
+      "peak_process_gpu_gib": 59.18359375,
+      "guard_samples": 153,
+      "scores_sha256": "c604b152ea8488ae8c1acbf97b7ee6412ec544672b4e797ab85efba18cb9f01f",
+      "all_guard_samples_pass": true
+    },
+    "q4km": {
+      "peak_process_gpu_gib": 23.603515625,
+      "guard_samples": 62,
+      "scores_sha256": "1bc4f8b069972de2927023a80f48712b9c18c7c67c6f8ad13e102271917240a4",
+      "all_guard_samples_pass": true
+    }
+  },
+  "comparisons": {
+    "case0": {
+      "same_engine_bf16_vs_q4km": {
+        "positions": 24,
+        "top1_agreement": 0.9166666666666666,
+        "mean_kl_reference_to_candidate": 0.24523341541109697,
+        "relative_logit_l2": 0.1899153639882347,
+        "max_absolute_logit_error": 11.66559648513794,
+        "reference_next_token_nll": 7.698874784524976,
+        "candidate_next_token_nll": 7.684016116815502,
+        "next_token_nll_delta": -0.01485866770947375
+      },
+      "hf_vs_llama_bf16": {
+        "positions": 24,
+        "top1_agreement": 0.9583333333333334,
+        "mean_kl_reference_to_candidate": 0.0027667359132448,
+        "relative_logit_l2": 0.028113679106773124,
+        "max_absolute_logit_error": 1.2116572856903076,
+        "reference_next_token_nll": 7.726147670466447,
+        "candidate_next_token_nll": 7.698874784524976,
+        "next_token_nll_delta": -0.02727288594147126
+      },
+      "hf_vs_q4km": {
+        "positions": 24,
+        "top1_agreement": 0.9166666666666666,
+        "mean_kl_reference_to_candidate": 0.24815785426195971,
+        "relative_logit_l2": 0.18784097390666363,
+        "max_absolute_logit_error": 11.573506355285645,
+        "reference_next_token_nll": 7.726147670466447,
+        "candidate_next_token_nll": 7.684016116815502,
+        "next_token_nll_delta": -0.04213155365094501
+      }
+    },
+    "case1": {
+      "same_engine_bf16_vs_q4km": {
+        "positions": 27,
+        "top1_agreement": 0.8518518518518519,
+        "mean_kl_reference_to_candidate": 0.22436344271018005,
+        "relative_logit_l2": 0.1725994774297952,
+        "max_absolute_logit_error": 11.66559648513794,
+        "reference_next_token_nll": 5.829126505994565,
+        "candidate_next_token_nll": 5.862806284107871,
+        "next_token_nll_delta": 0.03367977811330647
+      },
+      "hf_vs_llama_bf16": {
+        "positions": 27,
+        "top1_agreement": 0.8888888888888888,
+        "mean_kl_reference_to_candidate": 0.005728673622663434,
+        "relative_logit_l2": 0.0359325068313631,
+        "max_absolute_logit_error": 1.396411657333374,
+        "reference_next_token_nll": 5.846166025396029,
+        "candidate_next_token_nll": 5.829126505994565,
+        "next_token_nll_delta": -0.017039519401463643
+      },
+      "hf_vs_q4km": {
+        "positions": 27,
+        "top1_agreement": 0.8888888888888888,
+        "mean_kl_reference_to_candidate": 0.22924472890209047,
+        "relative_logit_l2": 0.17289294317213363,
+        "max_absolute_logit_error": 11.573506355285645,
+        "reference_next_token_nll": 5.846166025396029,
+        "candidate_next_token_nll": 5.862806284107871,
+        "next_token_nll_delta": 0.016640258711842826
+      }
+    },
+    "case2": {
+      "same_engine_bf16_vs_q4km": {
+        "positions": 30,
+        "top1_agreement": 0.8666666666666667,
+        "mean_kl_reference_to_candidate": 0.19464079497178682,
+        "relative_logit_l2": 0.1648623925307624,
+        "max_absolute_logit_error": 11.66559648513794,
+        "reference_next_token_nll": 6.430582053652912,
+        "candidate_next_token_nll": 6.494845278104967,
+        "next_token_nll_delta": 0.06426322445205557
+      },
+      "hf_vs_llama_bf16": {
+        "positions": 30,
+        "top1_agreement": 0.9333333333333333,
+        "mean_kl_reference_to_candidate": 0.0029357363440081575,
+        "relative_logit_l2": 0.027979855502497306,
+        "max_absolute_logit_error": 2.174300193786621,
+        "reference_next_token_nll": 6.4169004890590005,
+        "candidate_next_token_nll": 6.430582053652912,
+        "next_token_nll_delta": 0.013681564593911233
+      },
+      "hf_vs_q4km": {
+        "positions": 30,
+        "top1_agreement": 0.9,
+        "mean_kl_reference_to_candidate": 0.19755865275178683,
+        "relative_logit_l2": 0.16501442620257392,
+        "max_absolute_logit_error": 11.573506355285645,
+        "reference_next_token_nll": 6.4169004890590005,
+        "candidate_next_token_nll": 6.494845278104967,
+        "next_token_nll_delta": 0.0779447890459668
+      }
+    },
+    "case3": {
+      "same_engine_bf16_vs_q4km": {
+        "positions": 24,
+        "top1_agreement": 0.75,
+        "mean_kl_reference_to_candidate": 0.2594497529406525,
+        "relative_logit_l2": 0.1757876751629588,
+        "max_absolute_logit_error": 11.66559648513794,
+        "reference_next_token_nll": 7.104200206579344,
+        "candidate_next_token_nll": 7.318959442001381,
+        "next_token_nll_delta": 0.21475923542203645
+      },
+      "hf_vs_llama_bf16": {
+        "positions": 24,
+        "top1_agreement": 1.0,
+        "mean_kl_reference_to_candidate": 0.005567189205001765,
+        "relative_logit_l2": 0.04058739112877839,
+        "max_absolute_logit_error": 1.9913439750671387,
+        "reference_next_token_nll": 7.0732275867525685,
+        "candidate_next_token_nll": 7.104200206579344,
+        "next_token_nll_delta": 0.030972619826775905
+      },
+      "hf_vs_q4km": {
+        "positions": 24,
+        "top1_agreement": 0.75,
+        "mean_kl_reference_to_candidate": 0.2699696092069395,
+        "relative_logit_l2": 0.17605088377626688,
+        "max_absolute_logit_error": 11.573506355285645,
+        "reference_next_token_nll": 7.0732275867525685,
+        "candidate_next_token_nll": 7.318959442001381,
+        "next_token_nll_delta": 0.24573185524881236
+      }
+    },
+    "repeat0": {
+      "same_engine_bf16_vs_q4km": {
+        "positions": 24,
+        "top1_agreement": 0.9166666666666666,
+        "mean_kl_reference_to_candidate": 0.24523341541109697,
+        "relative_logit_l2": 0.1899153639882347,
+        "max_absolute_logit_error": 11.66559648513794,
+        "reference_next_token_nll": 7.698874784524976,
+        "candidate_next_token_nll": 7.684016116815502,
+        "next_token_nll_delta": -0.01485866770947375
+      },
+      "hf_vs_llama_bf16": {
+        "positions": 24,
+        "top1_agreement": 0.9583333333333334,
+        "mean_kl_reference_to_candidate": 0.0027667359132448,
+        "relative_logit_l2": 0.028113679106773124,
+        "max_absolute_logit_error": 1.2116572856903076,
+        "reference_next_token_nll": 7.726147670466447,
+        "candidate_next_token_nll": 7.698874784524976,
+        "next_token_nll_delta": -0.02727288594147126
+      },
+      "hf_vs_q4km": {
+        "positions": 24,
+        "top1_agreement": 0.9166666666666666,
+        "mean_kl_reference_to_candidate": 0.24815785426195971,
+        "relative_logit_l2": 0.18784097390666363,
+        "max_absolute_logit_error": 11.573506355285645,
+        "reference_next_token_nll": 7.726147670466447,
+        "candidate_next_token_nll": 7.684016116815502,
+        "next_token_nll_delta": -0.04213155365094501
+      }
+    }
+  },
+  "repeat_checks": [
+    {
+      "model": "bf16",
+      "case": "repeat0",
+      "matches_case": "case0",
+      "exact": true
+    },
+    {
+      "model": "q4km",
+      "case": "repeat0",
+      "matches_case": "case0",
+      "exact": true
+    }
+  ],
+  "evidence_sha256": {
+    "artifacts/q4km-lightning/quantization.json": "17f25fd52ad2d924c643907e0c01a92c41bff8418c68326d8645b753c7bd60a3",
+    "evidence/q4km-source-audit.json": "cf5cf9630a179b0cbf99bfe69aa85700ebf22836371f0c3f34a6a839927bf5fc",
+    "evidence/q4km-retained-byte-audit.json": "32f3565f8d8b0081404b3ac70ea271d5d1cbf9855eab800b11406a3a0bfcf98e",
+    "evidence/q4km-native-validation-namespace/summary.json": "9351610db8e4789c0508628d72c6ad1eead5afee21e52351a5aecfd454bd9636"
+  },
+  "limitations": [
+    "GGUF reference export only; ONNX packed operators are not implemented.",
+    "Four unique short prompts plus a repeat are not representative quality qualification.",
+    "Reference BF16 runtime is not source-bitwise certified; HF drift is reported separately.",
+    "The converter context metadata exceeds original configuration; no extra context is qualified.",
+    "No quantized throughput or 32K memory result is claimed."
+  ]
+}
