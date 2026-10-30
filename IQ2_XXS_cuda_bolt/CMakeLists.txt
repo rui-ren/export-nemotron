@@ -20,6 +20,15 @@ target_compile_options(bolt_upstream PRIVATE
 
 include(CTest)
 if(BUILD_TESTING)
+  set(ORT_LIBRARY "" CACHE FILEPATH "Qualified ORT shared library for integration tests")
+  if(ORT_LIBRARY)
+    add_library(ort_cuda_runner SHARED tests/ort_cuda_runner.cc)
+    target_compile_features(ort_cuda_runner PRIVATE cxx_std_17)
+    target_include_directories(ort_cuda_runner PRIVATE "${ORT_INCLUDE_DIR}")
+    target_link_libraries(ort_cuda_runner PRIVATE "${ORT_LIBRARY}")
+    set_target_properties(ort_cuda_runner PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+  endif()
   foreach(kind IN ITEMS iq2 q8)
     add_executable(test_${kind}_scales tests/scale_precision.cu)
     target_include_directories(test_${kind}_scales PRIVATE "${ORT_INCLUDE_DIR}")

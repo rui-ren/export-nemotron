@@ -16,7 +16,7 @@
     "iq2-compat/iq2xxs_grid.h": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324",
     "iq2-compat/bolt_ops.cu": "4a539c0e82b8ea48c2f3adc51dc324d0f792554bca2c46706b972ca5afc97345",
     "iq2-compat/CMakeLists.txt": "17391bb68f784ae39415b047238ebd792d695df757055b502c3dab0010837602",
-    "iq2-compat/iq2_plugin.cu": "95e03eed7b1e5fface042355cb2bcf01288cce8fbb0f8efd506f91cb1856a9a2",
+    "iq2-compat/iq2_plugin.cu": "c9fd183746e02ae91c379d1e8d4b8f3a138bea9362badc6492f4b57d80d1c3c3",
     "../src/bolt_ops.cu": "1f587d9eacc356805c37d19e94e7aa4465dd50302576b2ca4b9579d7c5ae8ba5",
     "model.onnx": "99147c0625547c136ff4dba3e8e5f7b258e5184c5bddd9cbc6e8d8aa242ca553"
   },
@@ -40,5 +40,6 @@
     "onnxruntime_genai.cpython-312-x86_64-linux-gnu.so": "16bef83bcbae8b9041db734c9694c905b939789cdb345cf05c43e28bbdbd6319",
     "libonnxruntime.so.1": "8bf43026c43ed7c06871776fc0a06fc05452f9f548cd92445ca4bfec52aca965"
   },
-  "build_note": "Source snapshots match deployed sources. Rebuilt binary hashes may differ with compiler/build-path/toolchain. Runtime, drafter, and large weight assets are not included."
+  "pre_review_iq2_plugin_sha256": "95e03eed7b1e5fface042355cb2bcf01288cce8fbb0f8efd506f91cb1856a9a2",
+  "build_note": "The bolt_ops.cu snapshots match deployed sources. The IQ2 plugin now adds geometry validation without modifying kernel arithmetic; historical measured library hashes and rates predate that wrapper fix. Rebuilt binary hashes may differ with compiler/build-path/toolchain. Runtime, drafter, and large weight assets are not included."
 }

@@ -11,6 +11,15 @@ namespace {
 #ifndef TEST_IQ2
 __device__ __align__(16) uint8_t q8_weights[4096][64];
 __device__ __half q8_scales[4096][2];
+
+__global__ void InitializeQ8() {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if (index >= 4096) return;
+  const __half scale = __ushort_as_half(0x2001u + index);
+  q8_scales[index][0] = q8_scales[index][1] = scale;
+  for (int i = 0; i < 64; ++i)
+    q8_weights[index][i] = static_cast<uint8_t>(index + i);
+}
 #endif
 
 __global__ void CheckScales(int* failures, int* witnesses) {
@@ -41,10 +50,8 @@ __global__ void CheckScales(int* failures, int* witnesses) {
   }
 #else
   // Exercise the actual FP16 scale loader before the original Q8 reconstruction.
-  uint8_t* weights = q8_weights[index];
-  __half* scales = q8_scales[index];
-  scales[0] = scales[1] = __float2half(base);
-  for (int i = 0; i < 64; ++i) weights[i] = static_cast<uint8_t>(index + i);
+  const uint8_t* weights = q8_weights[index];
+  const __half* scales = q8_scales[index];
   for (int t = 0; t < 4; ++t) {
     uint4 raw;
     float scale;
@@ -79,6 +86,13 @@ int main() {
   int* counts = nullptr;
   if (!CheckCuda(cudaMallocManaged(&counts, 2 * sizeof(int)))) return 1;
   counts[0] = counts[1] = 0;
+#ifndef TEST_IQ2
+  InitializeQ8<<<32, 128>>>();
+  if (!CheckCuda(cudaGetLastError()) || !CheckCuda(cudaDeviceSynchronize())) {
+    cudaFree(counts);
+    return 1;
+  }
+#endif
   CheckScales<<<32, 128>>>(counts, counts + 1);
   if (!CheckCuda(cudaGetLastError()) || !CheckCuda(cudaDeviceSynchronize())) {
     cudaFree(counts);

@@ -21,8 +21,19 @@ def digest(path: Path) -> str:
 
 def prepare_sources(output: Path) -> Path:
     """Verify immutable originals; relocate only absolute local include paths."""
+    stage = output.resolve() / "sources"
+    original_root = (ROOT / "sources").resolve()
+    if (
+        stage == original_root
+        or stage.is_relative_to(original_root)
+        or original_root.is_relative_to(stage)
+    ):
+        raise ValueError("Build staging must not overlap the immutable source archive")
     manifest = json.loads((ROOT / "provenance.json").read_text())["source_files"]
-    stage = output / "sources"
+    for name in manifest:
+        destination = (stage / name).resolve()
+        if destination.is_relative_to(original_root):
+            raise ValueError("Build staging must not overlap the immutable source archive")
     original_paths = {entry["original"]: name for name, entry in manifest.items()}
     for name, entry in manifest.items():
         path = ROOT / "sources" / name
@@ -48,6 +59,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build-dir", type=Path, default=ROOT / "build")
     parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument(
+        "--safe-module-cache",
+        action="store_true",
+        help="Opt-in Mamba module lifetime fix; distinct from the historical variant",
+    )
     parser.add_argument("--cuda-home", type=Path)
     parser.add_argument("--ort-include", type=Path)
     parser.add_argument("--torch", type=Path, help="Installed torch package directory")
@@ -58,6 +74,10 @@ def main() -> None:
     args = parser.parse_args()
     output = args.build_dir.resolve()
     stage = prepare_sources(output)
+    if args.safe_module_cache:
+        from rebuild.module_cleanup import apply
+
+        apply(stage)
     if args.prepare_only:
         print(f"Verified and staged sources in {stage}")
         return
@@ -107,7 +127,17 @@ def main() -> None:
         "commands": executed,
         "library_sha256": {path.name: digest(path) for path in sorted(libraries.glob("*.so"))},
         "historical_binary_identity": "Not assumed; compare hashes and qualify rebuilt binaries",
+        "variant": "safe-module-cache" if args.safe_module_cache else "historical",
     }
+    if args.safe_module_cache:
+        receipt["module_cleanup_sha256"] = {
+            name: digest(stage / "mamba/source" / name)
+            for name in (
+                "ssd_binary_source.cuh",
+                "parallel_source_readout.cuh",
+                "safe_cuda_module.h",
+            )
+        }
     (output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 

@@ -21,6 +21,9 @@ expert accumulation, Mamba cast corrections, observers, or debug fallbacks are
 activated. The separate source copies and historical `bolt_iq2_source` name are
 intentional: they preserve the exact deployed library boundaries. Despite that
 name, this library is the original native kernel with the IQ2 scale correction.
+The plugin wrapper additionally rejects native IQ2 intermediate sizes not
+divisible by 256, before any routed kernel launches. The kernel snapshots
+themselves remain unchanged.
 
 The original top-level exporter and kernels are **not modified** by this folder.
 In particular, its existing BF16 Q8 scale export is not compatible with the new
@@ -36,10 +39,13 @@ ORT headers. The measured build used CUDA 12.6, GCC 11.4 and ORT 1.31 headers.
 cmake -S IQ2_XXS_cuda_bolt -B IQ2_XXS_cuda_bolt/build \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CUDA_COMPILER="$CUDA_HOME/bin/nvcc" \
-  -DORT_INCLUDE_DIR=/path/to/ort/include/onnxruntime/core/session
+  -DORT_INCLUDE_DIR=/path/to/ort/include/onnxruntime/core/session \
+  -DORT_LIBRARY=/path/to/qualified/runtime/libonnxruntime.so.1
 cmake --build IQ2_XXS_cuda_bolt/build -j2
 CUDA_VISIBLE_DEVICES=0 ctest --test-dir IQ2_XXS_cuda_bolt/build --output-on-failure
-python -m unittest discover -s IQ2_XXS_cuda_bolt/tests -p '*_test.py'
+python -m unittest discover -s IQ2_XXS_cuda_bolt/tests -p native_runtime_test.py
+CUDA_VISIBLE_DEVICES=0 BOLT_PLUGIN=/path/to/qualified/runtime/libonnxruntime_providers_cuda.so \
+  python IQ2_XXS_cuda_bolt/tests/operators_test.py -v
 ```
 
 Outputs in `build/lib/`:
@@ -54,6 +60,15 @@ The CUDA regressions exercise the actual IQ2 dequantization and Q8 FP16 scale
 loader across scales, signs, codebook entries and quantized integers. Each test
 requires exact reconstructed BF16 values and actual counterexamples to early
 scale rounding. These are component tests, not full-model acceptance.
+The Q8 test initializes its read-only-cache inputs in a separate CUDA launch.
+
+The ORT integration tests require Torch, NumPy, `onnx_ir` and `gguf`. They
+exercise the actual new domains with single-/multi-row inputs, Q8 `[2,3,K]`
+shape preservation, independent GGUF IQ2 dequantization, routed hidden/part/final
+outputs, and invalid IQ2 geometry rejection. CPU fallback is disabled; CUDA
+absence fails rather than skips. `libort_cuda_runner.so` links directly to the
+qualified ORT library, avoiding an incompatible installed ORT Python wheel.
+`ORT_LIBRARY` is optional when not building these integration tests.
 
 ## Load the measured graph
 
@@ -96,9 +111,16 @@ model = create_model(
 ```
 
 The optional provider argument registers the qualified CUDA provider explicitly.
+Repeated calls reuse that registration; conflicting provider paths fail rather
+than silently taking over. An application-owned existing registration is accepted
+only when Linux process mappings identify exactly the requested provider.
+If its path cannot be verified, omit the argument to explicitly use the
+application's registration. Do not unregister it while using this loader.
 The loader uses the supported `Config.add_model_data` graph overlay, retaining
 the graph bytes for the model lifetime and resolving external data inside the
-asset root. Do not call `Model("IQ2_XXS_cuda_bolt")` or use escaping external-data
+asset root. It sets the decoder filename to `model.onnx` so a differently named
+decoder in the existing configuration cannot bypass the overlay.
+Do not call `Model("IQ2_XXS_cuda_bolt")` or use escaping external-data
 symlinks. No runtime security checks are bypassed.
 
 **Runtime is not bundled.** The benchmark used a custom ORT/GenAI build supporting
@@ -129,6 +151,8 @@ was **not independently verified**.
 rates, sequence digest and runtime identification. These are recorded
 machine-local results, not a portable performance guarantee or a matched speedup
 against the older diagnostic implementation.
+The review fixes add wrapper validation and loader/tests only; these historical
+rates were not remeasured on the rebuilt plugin.
 
 **Accuracy is not qualified for this variant.** The earlier corrected diagnostic
 implementation scored 168/200 (84%) on MMLU-Pro; that score must not be attributed

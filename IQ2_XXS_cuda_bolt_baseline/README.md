@@ -86,6 +86,39 @@ The build is sequential and does not run GPU inference.
 registrations. The ten targets are NVFP4, Q8, wide Q8, shared IQ2, routed IQ2,
 Mamba, attention, router, RMS and expert summation.
 
+### Opt-in module lifetime fix (not the historical variant)
+
+The archived Mamba headers deliberately retain their historical raw-pointer
+thread-local caches, which leak CUDA modules across short-lived threads.
+For a separately labeled rebuild, add **`--safe-module-cache`** and use a
+different directory, for example `--build-dir IQ2_XXS_cuda_bolt_baseline/build-safe`.
+`rebuild/module_cleanup.py` modifies only staged copies: caches own their
+entries through `unique_ptr`, and context-aware RAII owners synchronize pending
+work and unload modules on thread exit or partial-construction failure. If the
+owning context has already been destroyed, CUDA has reclaimed its modules.
+No kernel arithmetic or archived evidence is changed. The build receipt records
+the variant and patched header hashes; the historical 83.59 tok/s result does
+**not** qualify this cleanup variant.
+
+The real-module H100 regression can be built after preparing that variant:
+
+```bash
+python IQ2_XXS_cuda_bolt_baseline/build.py --prepare-only --safe-module-cache \
+  --build-dir IQ2_XXS_cuda_bolt_baseline/build-safe
+"$CUDA_HOME/bin/nvcc" -O3 -std=c++17 -arch=sm_90 -Xcompiler=-pthread \
+  -I/path/to/ort-1.31-headers \
+  -IIQ2_XXS_cuda_bolt_baseline/build-safe/sources/mamba/source \
+  -L"$CUDA_HOME/lib64/stubs" \
+  IQ2_XXS_cuda_bolt_baseline/rebuild/module_cleanup_test.cu -lcuda \
+  -o IQ2_XXS_cuda_bolt_baseline/build-safe/module_cleanup_test
+CUDA_VISIBLE_DEVICES=0 IQ2_XXS_cuda_bolt_baseline/build-safe/module_cleanup_test
+```
+
+Qualification here is limited to module ownership: repeated short-lived threads,
+same-thread cache reuse, an unbound context at thread exit, and failed module
+construction. Full-model numeric/throughput acceptance of this variant is not
+claimed.
+
 ## Assets and runtime are not bundled
 
 This folder is **not a standalone model**. It requires the already prepared
@@ -136,6 +169,10 @@ operator hashes to differ, records them, and does not waive output checks.
 Omit it when using the exact historical binaries. All five runs must emit
 the recorded 512 IDs; partial/mismatched results are preserved instead of
 silently accepted.
+After model loading, the replay also verifies and records the actual runtime
+DSO paths and hashes from `/proc/self/maps`, rejects mismatched mapped copies,
+and fails if any required runtime library is missing. Directory hashes alone
+are not treated as proof of the active runtime.
 
 `BOLT_MAMBA_CUMSUM_HEAD_TILE=1` is the frozen source-autotuner profile for
 **this benchmark prompt**, not a universal setting for arbitrary prompt lengths.
@@ -147,9 +184,11 @@ the qualification actually performed, without rewriting older evidence.
 
 The relocated sources built all ten shared libraries with CUDA 12.6, GCC 11
 and ORT 1.31 headers. All ten loaded in the qualified environment and exported
-`RegisterCustomOps`. Three wrapper regressions and Ruff lint/format checks
+`RegisterCustomOps`. Six wrapper regressions and Ruff lint/format checks
 passed. The 1,507-node / 1,200-initializer graph's external-data bounds and
 all ten recorded 512-token sequences were checked.
+The opt-in module cleanup regression loaded and unloaded all 25 modules without
+failure on H100; the archived sources still match every original SHA-256 pin.
 
 These are source/archive/build checks. **Full-model inference, throughput and
 accuracy were not rerun with the rebuilt binaries for this publication.**

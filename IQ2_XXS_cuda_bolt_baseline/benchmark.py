@@ -13,6 +13,33 @@ from build import digest
 ROOT = Path(__file__).resolve().parent
 
 
+def verify_mapped_runtime(
+    expected: dict[str, str], maps: Path = Path("/proc/self/maps")
+) -> dict:
+    """Verify every mapped copy, not merely files in the requested runtime directory."""
+    mapped = {}
+    for line in maps.read_text().splitlines():
+        fields = line.split(maxsplit=5)
+        if len(fields) != 6:
+            continue
+        path = Path(fields[5])
+        name = path.name.removesuffix(" (deleted)")
+        if name not in expected:
+            continue
+        if fields[5].endswith(" (deleted)"):
+            raise ValueError(f"Mapped runtime was deleted: {fields[5]}")
+        resolved = str(path.resolve(strict=True))
+        if resolved not in mapped:
+            checksum = digest(path)
+            if checksum != expected[name]:
+                raise ValueError(f"Mapped runtime mismatch: {path}")
+            mapped[resolved] = {"name": name, "sha256": checksum}
+    missing = expected.keys() - {entry["name"] for entry in mapped.values()}
+    if missing:
+        raise ValueError(f"Runtime libraries not mapped: {sorted(missing)}")
+    return mapped
+
+
 def verify_package(model: Path, *, allow_rebuilt: bool) -> dict[str, str]:
     provenance = json.loads((ROOT / "provenance.json").read_text())
     expected = {
@@ -67,6 +94,7 @@ def main() -> None:
         str(args.runtime_dir.resolve() / "libonnxruntime_providers_cuda.so"),
     )
     model = og.Model(str(args.model.resolve()))
+    mapped_runtime = verify_mapped_runtime(runtime)
     historical = json.loads((ROOT / "benchmark.json").read_text())
     capacity = json.loads((args.model / "genai_config.json").read_text())["model"][
         "context_length"
@@ -74,6 +102,7 @@ def main() -> None:
     result = {
         "bindings": bindings,
         "runtime_sha256": runtime,
+        "mapped_runtime": mapped_runtime,
         "rebuilt_libraries_allowed": args.allow_rebuilt_libraries,
         "prompt_ids": historical["prompt_ids"],
         "runs": [],

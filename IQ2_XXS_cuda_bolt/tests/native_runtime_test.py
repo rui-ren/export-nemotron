@@ -16,6 +16,12 @@ spec.loader.exec_module(runtime)
 
 
 class NativeRuntimeTest(unittest.TestCase):
+    def setUp(self):
+        runtime._PROVIDER_REGISTRATIONS.clear()
+        self.maps = patch.object(runtime, "_mapped_cuda_providers", return_value=set())
+        self.maps.start()
+        self.addCleanup(self.maps.stop)
+
     def test_graph_overlay_and_provider_registration(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -40,8 +46,54 @@ class NativeRuntimeTest(unittest.TestCase):
                 overlay["model"]["decoder"]["session_options"]["custom_ops_libraries"],
                 list(runtime._LIBRARIES),
             )
+            self.assertEqual(overlay["model"]["decoder"]["filename"], "model.onnx")
             config.add_model_data.assert_called_once_with("model.onnx", runtime._GRAPH_BYTES)
             self.assertIs(result, og.Model.return_value)
+
+    def test_registration_is_once_per_runtime_and_rejects_conflicting_paths(self):
+        og = SimpleNamespace(register_execution_provider_library=Mock())
+        provider = Path("/first/libonnxruntime_providers_cuda.so")
+        runtime._register_cuda_provider(og, provider)
+        runtime._register_cuda_provider(og, provider)
+        og.register_execution_provider_library.assert_called_once()
+        with self.assertRaisesRegex(ValueError, "already registered"):
+            runtime._register_cuda_provider(
+                og, Path("/second/libonnxruntime_providers_cuda.so")
+            )
+        other = SimpleNamespace(register_execution_provider_library=Mock())
+        runtime._register_cuda_provider(other, provider)
+        other.register_execution_provider_library.assert_called_once()
+
+    def test_external_registration_must_have_a_verified_matching_mapping(self):
+        provider = Path("/first/libonnxruntime_providers_cuda.so")
+        og = SimpleNamespace(
+            register_execution_provider_library=Mock(
+                side_effect=RuntimeError(
+                    "EP library is already registered under CUDAExecutionProvider"
+                )
+            )
+        )
+        with self.assertRaisesRegex(RuntimeError, "cannot verify"):
+            runtime._register_cuda_provider(og, provider)
+        with patch.object(runtime, "_mapped_cuda_providers", return_value={provider}):
+            runtime._register_cuda_provider(og, provider)
+        runtime._PROVIDER_REGISTRATIONS.clear()
+        with (
+            patch.object(
+                runtime, "_mapped_cuda_providers", return_value={Path("/other/provider")}
+            ),
+            self.assertRaisesRegex(ValueError, "Conflicting mapped"),
+        ):
+            runtime._register_cuda_provider(og, provider)
+
+    def test_registration_errors_are_not_suppressed(self):
+        og = SimpleNamespace(
+            register_execution_provider_library=Mock(
+                side_effect=RuntimeError("invalid library")
+            )
+        )
+        with self.assertRaisesRegex(RuntimeError, "invalid library"):
+            runtime._register_cuda_provider(og, Path("/provider"))
 
     def test_missing_library_fails_before_model_creation(self):
         with tempfile.TemporaryDirectory() as directory:

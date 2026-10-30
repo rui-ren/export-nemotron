@@ -8,9 +8,61 @@ from unittest import mock
 
 import benchmark
 import build
+from rebuild import module_cleanup
 
 
 class ArchiveTest(unittest.TestCase):
+    def test_build_stage_cannot_overwrite_archive_even_through_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "sources").mkdir()
+            alias = root / "alias"
+            alias.symlink_to(root, target_is_directory=True)
+            with mock.patch.object(build, "ROOT", root):
+                for destination in (root, alias):
+                    with self.assertRaisesRegex(ValueError, "must not overlap"):
+                        build.prepare_sources(destination)
+            self.assertEqual(list((root / "sources").iterdir()), [])
+
+    def test_opt_in_cleanup_changes_only_generated_headers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            stage = build.prepare_sources(Path(directory))
+            original = stage / "mamba/source/ssd_binary_source.cuh"
+            before = original.read_text()
+            module_cleanup.apply(stage)
+            after = original.read_text()
+            self.assertNotEqual(before, after)
+            self.assertIn("std::unique_ptr<SourceSsdBinary>", after)
+            provenance = json.loads((build.ROOT / "provenance.json").read_text())
+            for name, entry in provenance["source_files"].items():
+                self.assertEqual(build.digest(build.ROOT / "sources" / name), entry["sha256"])
+
+    def test_mapped_runtime_rejects_mismatched_copies_and_missing_libraries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            good = root / "good/libonnxruntime.so.1"
+            bad = root / "other/libonnxruntime.so.1"
+            for path in (good, bad):
+                path.parent.mkdir()
+            good.write_bytes(b"qualified")
+            bad.write_bytes(b"wrong")
+            maps = root / "maps"
+            expected = {good.name: build.digest(good)}
+            maps.write_text(f"1-2 r-xp 0 00:00 1 {good}\n")
+            self.assertEqual(
+                benchmark.verify_mapped_runtime(expected, maps)[str(good)]["sha256"],
+                expected[good.name],
+            )
+            maps.write_text(maps.read_text() + f"2-3 r-xp 0 00:00 2 {bad}\n")
+            with self.assertRaisesRegex(ValueError, "Mapped runtime mismatch"):
+                benchmark.verify_mapped_runtime(expected, maps)
+            maps.write_text("")
+            with self.assertRaisesRegex(ValueError, "not mapped"):
+                benchmark.verify_mapped_runtime(expected, maps)
+            maps.write_text(f"1-2 r-xp 0 00:00 1 {good} (deleted)\n")
+            with self.assertRaisesRegex(ValueError, "was deleted"):
+                benchmark.verify_mapped_runtime(expected, maps)
+
     def test_include_relocation_preserves_originals(self):
         with tempfile.TemporaryDirectory() as directory:
             stage = build.prepare_sources(Path(directory))
