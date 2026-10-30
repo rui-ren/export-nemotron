@@ -1,0 +1,45 @@
+{
+  "upstream_repository": "https://github.com/rui-ren/nemotron_ops",
+  "upstream_commit": "e4f63ffdcb830e2faf5ddb149047953d922a6afb",
+  "model": "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB",
+  "model_revision": "c6cc2e8ffa353403213d6b9b18aaf8eb684d705a",
+  "graph": {
+    "nodes": 1312,
+    "initializers": 1196,
+    "io_unchanged": true
+  },
+  "source_and_graph_sha256": {
+    "compat/iq2xxs_grid.h": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324",
+    "compat/bolt_ops.cu": "a211ddf1c5a9b63d745ccdeb370f18c51b78b3cdf6f3bd51cb9cbf9c8619e91f",
+    "compat/CMakeLists.txt": "91cd9e3cff45c2a1e2e9ebf0da8a8721e07b87e287afffb1e84f798bb278e966",
+    "compat/q8_rank_compat.cu": "70c7bb6bbd2acacedec9b39dbdb71ab6d3d55555260446f6ea66b5c4af6f3b6c",
+    "iq2-compat/iq2xxs_grid.h": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324",
+    "iq2-compat/bolt_ops.cu": "4a539c0e82b8ea48c2f3adc51dc324d0f792554bca2c46706b972ca5afc97345",
+    "iq2-compat/CMakeLists.txt": "17391bb68f784ae39415b047238ebd792d695df757055b502c3dab0010837602",
+    "iq2-compat/iq2_plugin.cu": "c9fd183746e02ae91c379d1e8d4b8f3a138bea9362badc6492f4b57d80d1c3c3",
+    "../src/bolt_ops.cu": "1f587d9eacc356805c37d19e94e7aa4465dd50302576b2ca4b9579d7c5ae8ba5",
+    "model.onnx": "99147c0625547c136ff4dba3e8e5f7b258e5184c5bddd9cbc6e8d8aa242ca553"
+  },
+  "required_asset_sha256": {
+    "q8-source-scales.fp16.bin": "70cbb59196977b6ad2079e3f64e1e9b5bb09804946bb97779e9aba5d93374631",
+    "dflash2.onnx.data": "9c4636201f5251f5fbe5dae8f3a213c8b0f5b33efb9c5b671cddd5b4a9de748a",
+    "native-iq2-memory.bin": "d0487be1ed021161ddc19fd8d44908575986360f144b5cd3c1c50679979457af",
+    "model.onnx.data": "649a2d7820299bd7362c02c00b3450f1d22b5b39dfa21fde49d068340b68646f"
+  },
+  "measured_library_sha256": {
+    "libbolt_upstream.so": "28e9136fe5bbe1dc023a19c0e26f905e87c4c6f2d373956ffa68702204ebad1d",
+    "libbolt_q8_fp16.so": "cd96d32b37d57b696817ae1a7e2ab02ff1231f3b96b8d4048a80ffc9c379d81f",
+    "libbolt_iq2_source.so": "0fbfb5f8651b07f0141c025ca5b0f06aaed7cb63d4a7c417c819867cc24e38d7",
+    "libbolt_drafter_original.so": "da5f6a5996d2c5711ba42f7a130f7517c7f5d77045c354e66b1c4af9c3a5d575"
+  },
+  "measured_runtime_sha256": {
+    "libonnxruntime_providers_shared.so": "e1e888aabf292c714a4ae997dc14744559f75e31a04631887c57e2e82971c537",
+    "libonnxruntime-genai.so": "9462244243d4cc671d2f099cbb095ed93e46c17f9db7e8a000406346f2f574f9",
+    "libonnxruntime_providers_cuda.so": "38ca15598391ec39487cd37112d5dd1502782c38eaee6459954d7b79c210014e",
+    "libonnxruntime-genai-cuda.so": "a927c155c3cf02d3d2f801cab695ced783f22d6507e76904150db1df7cf5f9ed",
+    "onnxruntime_genai.cpython-312-x86_64-linux-gnu.so": "16bef83bcbae8b9041db734c9694c905b939789cdb345cf05c43e28bbdbd6319",
+    "libonnxruntime.so.1": "8bf43026c43ed7c06871776fc0a06fc05452f9f548cd92445ca4bfec52aca965"
+  },
+  "pre_review_iq2_plugin_sha256": "95e03eed7b1e5fface042355cb2bcf01288cce8fbb0f8efd506f91cb1856a9a2",
+  "build_note": "The bolt_ops.cu snapshots match deployed sources. The IQ2 plugin now adds geometry validation without modifying kernel arithmetic; historical measured library hashes and rates predate that wrapper fix. Rebuilt binary hashes may differ with compiler/build-path/toolchain. Runtime, drafter, and large weight assets are not included."
+}

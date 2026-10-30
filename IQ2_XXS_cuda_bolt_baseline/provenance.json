@@ -1,0 +1,393 @@
+{
+  "source_files": {
+    "attention/source_attention.cc": {
+      "original": "/home/mobius/.worktrees/bolt-perf-attention-prefix-20261029/experiments/attention-prefix/source_attention.cc",
+      "sha256": "62f340e75dbc250aad770567cdff32bd35bb97f893054c9ad716624597125464"
+    },
+    "router/source_router.cc": {
+      "original": "/home/mobius/bolt-native-router-20261028/source_router.cc",
+      "sha256": "8072b8b17175ec6d6b5bde449c2cd416b9a09d55ebdf17830c6ba20b3cc70e85"
+    },
+    "router/native_router.cu": {
+      "original": "/home/mobius/bolt-native-router-20261028/native_router.cu",
+      "sha256": "8e10de5e3c06d7decd1fb6cf60f6ed198672586dec0cfeec410baad5647e8f60"
+    },
+    "mamba/source/bolt_mamba_e6.cu": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/bolt_mamba_e6.cu",
+      "sha256": "237197e93f0880cd5d2cc5eb866876582d076c08e72072c26a6db616e3340dff"
+    },
+    "mamba/source/mamba_scan.cuh": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/mamba_scan.cuh",
+      "sha256": "29bdd5292779ff25f0fb474f61186323f1d62dea872d93c5005708d13293915e"
+    },
+    "mamba/source/parallel_source_readout.cuh": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/parallel_source_readout.cuh",
+      "sha256": "6a02d01e0624768c633207169062c35cb92d626a46fa2639355fa7984fbf578b"
+    },
+    "mamba/source/readout_launch.inc": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/readout_launch.inc",
+      "sha256": "7d00187900d9326bfe110e3fe8471235b9e97d8dba6a73b3ffc66cff3a647f11"
+    },
+    "mamba/source/cb_launch.inc": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cb_launch.inc",
+      "sha256": "9bb10482c8e8333f03e9eace15866fcfcb47d65bc4e2d3108dcc36f0b92c2c6a"
+    },
+    "mamba/source/readout_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/readout_cubin.h",
+      "sha256": "b1fec0dcb22cb94d76c771b3c8302527a957aa912848d698489e641fa9efbe06"
+    },
+    "mamba/source/cb_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cb_cubin.h",
+      "sha256": "16624bec1df55b76ec508812ce0c4c09b061f2ca6128780cff83d2a841036e19"
+    },
+    "mamba/source/ssd_binary_source.cuh": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/ssd_binary_source.cuh",
+      "sha256": "979c7304a6e07563d38f7b844a3087bc398b4845d9248ba0c7a8802fe58a0a7c"
+    },
+    "mamba/source/state_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/state_cubin.h",
+      "sha256": "9dd3936c6067dedcf86d59ffdd1eb20baa363dc79b5edbcb9879210511c1a67a"
+    },
+    "mamba/source/observed_cumsum_profiles.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/observed_cumsum_profiles.h",
+      "sha256": "b76b8980984de4289a46541c57888c4de1890f7ae4d87407b482b520019ef8e1"
+    },
+    "mamba/source/cumsum_h64_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h64_cubin.h",
+      "sha256": "d153c7a269e941345cd70ca93821925b61f05ebdabeca5c66863b9d253513b65"
+    },
+    "mamba/source/cumsum_h32_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h32_cubin.h",
+      "sha256": "1a5ee619e9dacde48d682b9e370199891ccbebc0147ef9c096100d2aedfbbcad"
+    },
+    "mamba/source/cumsum_h16_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h16_cubin.h",
+      "sha256": "4b6faa34e2e188bd1cf7dab9731ef088bd3803c91eec4323fdcb2f2411643c8d"
+    },
+    "mamba/source/cumsum_h8_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h8_cubin.h",
+      "sha256": "3f240740034b5bba74a683b13dbe54c2e2c8389be4805438073051984ced069e"
+    },
+    "mamba/source/cumsum_h4_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h4_cubin.h",
+      "sha256": "3f4c50c1843db147d00e3d5c40059d063e2895354986ca2da78e3bbcf74f9d7e"
+    },
+    "mamba/source/cumsum_h2_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h2_cubin.h",
+      "sha256": "0afc2affdd80256a11cee14e601c18964f52fe4c78eb31deb4f2e57cc9e6c18f"
+    },
+    "mamba/source/cumsum_h1_cubin.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h1_cubin.h",
+      "sha256": "848507693e0bcf29fcf0f5091311fce4af709e5ed8521aa8435a5fb005df4933"
+    },
+    "mamba/source/source_profile_launch.h": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/source_profile_launch.h",
+      "sha256": "b94ee1996a616b5060ee923a4a6a2a02e2e91aa452f98c94f5464db6922439b9"
+    },
+    "mamba/source/norm_source_kernel.cuh": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/norm_source_kernel.cuh",
+      "sha256": "d3f756f156818d36d3cdbcfa6a44f38f44d022b033a865dd95239b7be8d737c7"
+    },
+    "mamba/source/cached_source_kernel.cuh": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cached_source_kernel.cuh",
+      "sha256": "8c4bf921e227d6ca0e46f509d2b0b622794a0ec2bd9555e3c7bf5cf65a7701a5"
+    },
+    "mamba/coalesced_cached.cuh": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/coalesced_cached.cuh",
+      "sha256": "f1e0d410c4e6de98385ea86f0cac32bd15f7d1a056072db9593e9b73f5a2687e"
+    },
+    "moe/source_moe_sum.cu": {
+      "original": "/home/mobius/bolt-q8-position5-20261023/source-moe/source_moe_sum.cu",
+      "sha256": "42ff5b79f3d6ed34403a40966761bf64d0dbce3fdd41aed4c8e26b0e861704d4"
+    },
+    "rms/ort_source_rms.cc": {
+      "original": "/home/mobius/bolt-q8-position5-20261023/source-rms/ort_source_rms.cc",
+      "sha256": "da3f43866db949621a0e7e0c1a9fcd5858a044d7bbdbc70c2a8b8fcf1f22489f"
+    },
+    "rms/source_rms.cu": {
+      "original": "/home/mobius/bolt-q8-position5-20261023/source-rms/source_rms.cu",
+      "sha256": "311e44263afd71b1df52788c2757c2fe9dcf0bd23f57afd427e599751ae56a73"
+    },
+    "routed/native_routed.cu": {
+      "original": "/home/mobius/bolt-native-wgmma-record-20261028/native_routed.cu",
+      "sha256": "8b1cb5e1b14749e358bda8c5a66543cee3b2466d60dda4ee67ab518a59205b46"
+    },
+    "routed/routed_v3_ort.cc": {
+      "original": "/home/mobius/bolt-native-wgmma-record-20261028/routed_v3_ort.cc",
+      "sha256": "789f31fd1f28e58838a0e56fcc55182361f76117f197967394b73880a786c994"
+    },
+    "routed/native_projection.cu": {
+      "original": "/home/mobius/bolt-native-wgmma-record-20261028/native_projection.cu",
+      "sha256": "00c9e6aab03a1596f3d07838fe4a863cacbf9d3200fb64c09ed768bee06027bd"
+    },
+    "routed/ampere_projection.cu": {
+      "original": "/home/mobius/bolt-native-wgmma-record-20261028/ampere_projection.cu",
+      "sha256": "65cb16f7779307cf441a64734db78cabdfa253f685a7737aaf7ceb73746ff49c"
+    },
+    "routed/bolt_ops.cu": {
+      "original": "/home/mobius/bolt-native-wgmma-record-20261028/bolt_ops.cu",
+      "sha256": "77a3e60b5226631476d6b790085d343f5d5b33c3b5215b940353cace2e80bc08"
+    },
+    "routed/iq2xxs_grid.h": {
+      "original": "/home/mobius/bolt-native-wgmma-record-20261028/iq2xxs_grid.h",
+      "sha256": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324"
+    },
+    "fallback/operators/iq2/ort_source_iq2.cc": {
+      "original": "/home/mobius/bolt-native-split-projection-20261028/operators/iq2/ort_source_iq2.cc",
+      "sha256": "3dc705fa20b86a7a33b648242646ea94b5d46fcecbf9fe2d303281c2e72115af"
+    },
+    "shared/hybrid_shared.cu": {
+      "original": "/home/mobius/bolt-native-parallel-source-pool-20261029/hybrid_shared.cu",
+      "sha256": "8cb1628c0e4b5d4126867d68039723f5d436dd6d4400e8657ba01f5f3a0a6891"
+    },
+    "fallback/operators/iq2/source_iq2.cu": {
+      "original": "/home/mobius/bolt-native-split-projection-20261028/operators/iq2/source_iq2.cu",
+      "sha256": "c93f91900c4aad5a546bebe1f50d8a1cb92706b0df0e384933b84606c456d728"
+    },
+    "fallback/operators/projection_scratch.h": {
+      "original": "/home/mobius/bolt-native-split-projection-20261028/operators/projection_scratch.h",
+      "sha256": "67932cc6feddabd13024a11838faf6dca8f9dc44c663e1360f1e429ae9925904"
+    },
+    "fallback/operators/iq2/src/iq2xxs_grid.h": {
+      "original": "/home/mobius/bolt-native-split-projection-20261028/operators/iq2/src/iq2xxs_grid.h",
+      "sha256": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324"
+    },
+    "shared-native/native_split.cu": {
+      "original": "/home/mobius/bolt-native-parallel-source-split-20261029/native_split.cu",
+      "sha256": "4cdd6d0e09d8823e5d2e18c8c72c60483f5caffc12f62246cbd46eb04d381712"
+    },
+    "stream-ordered/wide/native_projection.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/native_projection.cu",
+      "sha256": "0c941f7af8b4b8581dee3d287f18e4efc42e37a52c0e1053da9f8b085f5d3474"
+    },
+    "stream-ordered/wide/ampere_projection.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/ampere_projection.cu",
+      "sha256": "65cb16f7779307cf441a64734db78cabdfa253f685a7737aaf7ceb73746ff49c"
+    },
+    "stream-ordered/wide/bolt_ops.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/bolt_ops.cu",
+      "sha256": "77a3e60b5226631476d6b790085d343f5d5b33c3b5215b940353cace2e80bc08"
+    },
+    "stream-ordered/wide/iq2xxs_grid.h": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/iq2xxs_grid.h",
+      "sha256": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324"
+    },
+    "stream-ordered/wide/operators/q8wide/ort_source_q8.cc": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/operators/q8wide/ort_source_q8.cc",
+      "sha256": "b865d6aec2e0d7ffae07613eb8ec78405847044ad301337eff223f42c9094efe"
+    },
+    "stream-ordered/wide/operators/q8wide/source_q8_dims.h": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/operators/q8wide/source_q8_dims.h",
+      "sha256": "426bd4869500ee8229f78bd084c5652489ccec1960dad678ac6500e4904a3853"
+    },
+    "q8-fused/hybrid_q8_wide.cu": {
+      "original": "/home/mobius/.worktrees/bolt-perf-q8-split-20261029/experiments/q8_split/fused-cta-v1/hybrid_q8_wide.cu",
+      "sha256": "3f2c62f0e186f8ae02ba562f8be8f521f8dd05e3710ceace036bd625fb504ce6"
+    },
+    "stream-ordered/wide/hybrid_q8_wide.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/hybrid_q8_wide.cu",
+      "sha256": "d5100beaa02e47fd069c2fa56363500534c72f9d373840228343139ba28e721b"
+    },
+    "stream-ordered/wide/operators/q8wide/source_q8.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/operators/q8wide/source_q8.cu",
+      "sha256": "f64edebdefb86aa00055248e7e24ecff0959027bedb508febfd9baaa376f6115"
+    },
+    "stream-ordered/wide/operators/projection_scratch.h": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/wide/operators/projection_scratch.h",
+      "sha256": "67932cc6feddabd13024a11838faf6dca8f9dc44c663e1360f1e429ae9925904"
+    },
+    "stream-ordered/latent/operators/q8/ort_source_q8.cc": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/operators/q8/ort_source_q8.cc",
+      "sha256": "2279db9d96c002f9407ee84cefe26d73a4811e49e9caf0bc0b7829b54e09033f"
+    },
+    "q8-fused/hybrid_q8.cu": {
+      "original": "/home/mobius/.worktrees/bolt-perf-q8-split-20261029/experiments/q8_split/fused-cta-v1/hybrid_q8.cu",
+      "sha256": "1ac559fa2cffa86008cbff06f1ef1b1d357a65fb97b45128a143419257b6eedc"
+    },
+    "stream-ordered/latent/hybrid_q8.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/hybrid_q8.cu",
+      "sha256": "23717720bd1e5423f625868f442a5ec79b8ebf1a2086707b15aa433ecdaa7c42"
+    },
+    "stream-ordered/latent/operators/q8/source_q8.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/operators/q8/source_q8.cu",
+      "sha256": "98379a5726875781ab92c1160324b0ad65668bb5fba5219c73f5318c2ad80cb5"
+    },
+    "stream-ordered/latent/operators/projection_scratch.h": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/operators/projection_scratch.h",
+      "sha256": "67932cc6feddabd13024a11838faf6dca8f9dc44c663e1360f1e429ae9925904"
+    },
+    "stream-ordered/latent/native_projection.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/native_projection.cu",
+      "sha256": "7106a0ae98b6374c5f78bc2d76dadf9a1688d6bc207bcd3cec6fed9245827adc"
+    },
+    "stream-ordered/latent/ampere_projection.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/ampere_projection.cu",
+      "sha256": "65cb16f7779307cf441a64734db78cabdfa253f685a7737aaf7ceb73746ff49c"
+    },
+    "stream-ordered/latent/bolt_ops.cu": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/bolt_ops.cu",
+      "sha256": "77a3e60b5226631476d6b790085d343f5d5b33c3b5215b940353cace2e80bc08"
+    },
+    "stream-ordered/latent/iq2xxs_grid.h": {
+      "original": "/home/mobius/bolt-native-stream-ordered-20261028/latent/iq2xxs_grid.h",
+      "sha256": "66ed34b0ec6357faef9a6a223f93a00f462647405628c2b1e661cb9a82d69324"
+    },
+    "q8-fused/fused_q8.cu": {
+      "original": "/home/mobius/.worktrees/bolt-perf-q8-split-20261029/experiments/q8_split/fused-cta-v1/fused_q8.cu",
+      "sha256": "ae44338ef184998f872371be5e921f477e168d31745b9746c1f7aff55775c16c"
+    },
+    "nvfp4-parent/native_geometry.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/source/native_geometry.cu",
+      "sha256": "36f494571d4bfae0be824230dfe88aa119f49801da4bc18464050e3a6408465f"
+    },
+    "nvfp4-parent/baseline_snapshot.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/source/baseline_snapshot.cu",
+      "sha256": "b0147e2e4754916a2a642f53d87c7d5324fa2b19909078cab959a2f15af79f2a"
+    },
+    "nvfp4-parent/native_out.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/source/native_out.cu",
+      "sha256": "46510bfc1fbe1ad488705e2bddba0ae8355a334d9637d1a865c13e1c042d9a79"
+    },
+    "nvfp4-parent/native_nvfp4.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/source/native_nvfp4.cu",
+      "sha256": "9798ea1cf7bd5ab5a518d4931221f1ba906e93c66d2bc6a19b4b50ce57e3aa98"
+    },
+    "nvfp4/ort_source_nvfp4.cc": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/ort_source_nvfp4.cc",
+      "sha256": "2087983cb3a61372deff11d6382faaecce96a31a273d11ff34d6dc1e5e00c079"
+    },
+    "nvfp4/baseline_source_nvfp4.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/baseline_source_nvfp4.cu",
+      "sha256": "0b529323e9140e04094f16c05864dd434d3cf287741805c51e77b4e57f9a12fa"
+    },
+    "nvfp4/projection_scratch.h": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/projection_scratch.h",
+      "sha256": "67932cc6feddabd13024a11838faf6dca8f9dc44c663e1360f1e429ae9925904"
+    },
+    "nvfp4/dispatch.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/dispatch.cu",
+      "sha256": "bb624a7fe0ebd40d0c4405db0f8fe46e39a99b215acc59197353b67d1d396fa2"
+    },
+    "nvfp4/baseline_dispatch.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/baseline_dispatch.cu",
+      "sha256": "f25c923514e33add6957414d4c1cc4cb82d45c43adf85116d9f0cfef84783281"
+    },
+    "nvfp4/native_r8.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/native_r8.cu",
+      "sha256": "ad9dc892d8fa6c48c331d2e23603cd420f0a3dbd362441e8bf213d0c9ea97638"
+    },
+    "nvfp4/native_r8_plan.h": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/native_r8_plan.h",
+      "sha256": "9e148e509c81e0f5401626653892c2c04625ea63ba29e579cc495bb1e817c8d6"
+    },
+    "nvfp4/baseline_snapshot.cu": {
+      "original": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/source/baseline_snapshot.cu",
+      "sha256": "b0147e2e4754916a2a642f53d87c7d5324fa2b19909078cab959a2f15af79f2a"
+    },
+    "mamba/source/cumsum_h32_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h32_abi.json",
+      "sha256": "f12236d7228f2aa4b5db21bec08f27aeb337d165c9440bfb3559cc5a0ec1fb82"
+    },
+    "mamba/source/cumsum_h1_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h1_abi.json",
+      "sha256": "325acfcd143ffacf4f3582698a7d8f3952f175fcc2598a3b51902b471baa22aa"
+    },
+    "mamba/source/readout_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/readout_abi.json",
+      "sha256": "956576ecc7839e8ce3868424e2f257a05e2911cf55f1fa659f07b41507c6a93d"
+    },
+    "mamba/source/cumsum_h8_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h8_abi.json",
+      "sha256": "045132afd73b5cb7b1b56556cc90fed610de26e5c254daea0b2b2c1ebeb12124"
+    },
+    "mamba/source/cumsum_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_abi.json",
+      "sha256": "045132afd73b5cb7b1b56556cc90fed610de26e5c254daea0b2b2c1ebeb12124"
+    },
+    "mamba/source/cumsum_h2_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h2_abi.json",
+      "sha256": "81ab500906b45d6c80ed8478b78496767b059973be3fec2d62cdf488c130ca07"
+    },
+    "mamba/source/cumsum_h64_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h64_abi.json",
+      "sha256": "9b057b79bb5f1f4277661cc49371cacbe2343dc466069dd2e7ade9899389b629"
+    },
+    "mamba/source/cb_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cb_abi.json",
+      "sha256": "3c93c88d37d94a3a11a33fd9cde911e16320ac3790d68b516c7610f8e6638ed9"
+    },
+    "mamba/source/state_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/state_abi.json",
+      "sha256": "6741aec235ab9d01f4ce0d8afa86c32cbe328bbd88c95904c5c09f7fdae47376"
+    },
+    "mamba/source/cumsum_h4_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h4_abi.json",
+      "sha256": "77946accdea3bfda38e7d54d39aad94c69dc9f09097ecc8d7d6394312d920b08"
+    },
+    "mamba/source/observed-cumsum-provenance.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/observed-cumsum-provenance.json",
+      "sha256": "283e4a00df096aaffa1b3489b27b5bc432c93b0262331217605b856eab3b7c19"
+    },
+    "mamba/source/cumsum_h16_abi.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/cumsum_h16_abi.json",
+      "sha256": "03c78a409cad06aa46b09380be533b6ab3da54d8e40e5048cf2cac6e51f390a2"
+    },
+    "mamba/source/source-profile.json": {
+      "original": "/home/mobius/bolt-native-mamba-coalesced-v2-20261028/source/source-profile.json",
+      "sha256": "9208372eea9fe5c3c391256e97b5b7deee67ffd76c8fa61ddf349be35918b188"
+    }
+  },
+  "graph_sha256": "22bc5f8587c47e89574cd60edb7a1798a56a55f2d855baff36067ba3b75a13f4",
+  "config_sha256": "981c69a0a2a196a22e529107e413317712118c00e9605a13bd1ab1fa848cdc4a",
+  "historical_generate_sha256": "c57dbfa578de419f9a41c2ade5d9e5d510aef85d44c9de545dff5d962e975533",
+  "measured_library_sha256": {
+    "libbolt_ops.so": "e487651f51a9bde402ff046374571e28b01db215d62b257b4eb58ce80a7ff35b",
+    "libsource_nvfp4.so": "c8faf4027913cba681bf7919ed18c9393a3864cb9dad13349f4bfa1ad13ce7bf",
+    "libsource_attention.so": "ad7b70b351c5c6f72ab828f79570dcbb7605b2cca0e9b049f64f58b4dd8ce1f8",
+    "libbolt_drafter_original.so": "da5f6a5996d2c5711ba42f7a130f7517c7f5d77045c354e66b1c4af9c3a5d575",
+    "libsource_router.so": "71c493d1a40ddf018de65230fdfbac1bff2657cf5e013e138ae4baeff9eb1840",
+    "libsource_shared_iq2.so": "f7c6f4e52bbfec63baead06e5050155c6c2c47d717b800c7fc4613aeed0b1b1a",
+    "libsource_q8.so": "65475cd05f3c11790f1d0ee5156961da94ad9e7a876a056c394cc1813211315f",
+    "libsource_q8_wide.so": "fce95783690af1d8aa2ed6d845724b32df9b62f6a31dd15382a12ef9a3260949",
+    "libsource_mamba_e6.so": "b30ff5dbb4a5a28ea3108a99e67c7e7048a9a537fa33732f5995a3b707a78bec",
+    "libsource_moe_sum.so": "a054fcbd11323e576f6ecc64d127a15a79f7b6013fac8627ffc573b0bd4997d7",
+    "routed_v3.so": "9f7da79c565bc4f006be88577925fd7b4d246ffc66b8b2bba0cd32356b8a1823",
+    "libsource_rms.so": "1e666514d06b548bee4615ac50004b25215207cfa5e084ce31abd4a44a3c737f"
+  },
+  "runtime_sha256": {
+    "libonnxruntime_providers_shared.so": "e1e888aabf292c714a4ae997dc14744559f75e31a04631887c57e2e82971c537",
+    "libonnxruntime-genai.so": "9462244243d4cc671d2f099cbb095ed93e46c17f9db7e8a000406346f2f574f9",
+    "libonnxruntime_providers_cuda.so": "38ca15598391ec39487cd37112d5dd1502782c38eaee6459954d7b79c210014e",
+    "libonnxruntime-genai-cuda.so": "a927c155c3cf02d3d2f801cab695ced783f22d6507e76904150db1df7cf5f9ed",
+    "onnxruntime_genai.cpython-312-x86_64-linux-gnu.so": "16bef83bcbae8b9041db734c9694c905b939789cdb345cf05c43e28bbdbd6319",
+    "libonnxruntime.so.1": "8bf43026c43ed7c06871776fc0a06fc05452f9f548cd92445ca4bfec52aca965"
+  },
+  "required_unchanged_libraries": [
+    "libbolt_ops.so",
+    "libbolt_drafter_original.so"
+  ],
+  "source_package": "/home/mobius/.worktrees/bolt-regression-projection-20261029b/experiments/projection-v1/native-r8-v1/integration-v3",
+  "source_manifest_sha256": "21ad705a62e74721239e6b3b75326a95dc09b7019ed65e93915fa96f15c9db8d",
+  "required_assets": {
+    "model.onnx.data": {
+      "sha256": "649a2d7820299bd7362c02c00b3450f1d22b5b39dfa21fde49d068340b68646f",
+      "bytes": 43085691904
+    },
+    "native-iq2-memory.bin": {
+      "sha256": "d0487be1ed021161ddc19fd8d44908575986360f144b5cd3c1c50679979457af",
+      "bytes": 17506959360
+    },
+    "q8-source-scales.fp16.bin": {
+      "sha256": "70cbb59196977b6ad2079e3f64e1e9b5bb09804946bb97779e9aba5d93374631",
+      "bytes": 72351744
+    },
+    "dflash2.onnx": {
+      "sha256": "391d8387c2afc72f9769de3572506f88137c9aed871683e341386fd8303a57a7",
+      "bytes": 198170
+    },
+    "dflash2.onnx.data": {
+      "sha256": "9c4636201f5251f5fbe5dae8f3a213c8b0f5b33efb9c5b671cddd5b4a9de748a",
+      "bytes": 3937009664
+    }
+  }
+}

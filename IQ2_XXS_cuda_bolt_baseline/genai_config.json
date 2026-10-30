@@ -1,0 +1,129 @@
+{
+  "model": {
+    "type": "nemotron_bolt",
+    "context_length": 135160,
+    "vocab_size": 131072,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      11
+    ],
+    "pad_token_id": 0,
+    "decoder": {
+      "filename": "model.onnx",
+      "session_options": {
+        "provider_options": [
+          {
+            "cuda": {
+              "enable_cuda_graph": "0",
+              "use_tf32": "0"
+            }
+          }
+        ],
+        "ep.cuda.arena.use_cuda_mempool": "1",
+        "ep.cuda.fpa_intb_gemm": "0",
+        "custom_ops_libraries": [
+          "libbolt_ops.so",
+          "libsource_mamba_e6.so",
+          "libsource_attention.so",
+          "libsource_q8_wide.so",
+          "libsource_shared_iq2.so",
+          "libsource_router.so",
+          "libsource_q8.so",
+          "libsource_nvfp4.so",
+          "libsource_moe_sum.so",
+          "routed_v3.so",
+          "libsource_rms.so"
+        ]
+      },
+      "head_size": 128,
+      "hidden_size": 4096,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 2,
+      "num_hidden_layers": 88,
+      "inputs": {
+        "input_ids": "input_ids",
+        "past_sequence_length": "seqlens_k",
+        "total_sequence_length": "total_sequence_length",
+        "past_key_names": "past_key.%d",
+        "past_value_names": "past_value.%d",
+        "past_conv_names": "past_conv.%d",
+        "past_recurrent_names": "past_ssm.%d"
+      },
+      "outputs": {
+        "logits": "logits",
+        "aux_hidden_states": "aux_hidden_states",
+        "present_key_names": "present_key.%d",
+        "present_value_names": "present_value.%d",
+        "present_conv_names": "present_conv.%d",
+        "present_recurrent_names": "present_ssm.%d"
+      }
+    },
+    "dflash2": {
+      "filename": "dflash2.onnx",
+      "session_options": {
+        "provider_options": [
+          {
+            "cuda": {
+              "enable_cuda_graph": "1",
+              "min_num_runs_before_cuda_graph_capture": "2"
+            }
+          }
+        ],
+        "custom_ops_library": "libbolt_drafter_original.so",
+        "ep.cuda.arena.use_cuda_mempool": "1",
+        "ep.cuda.fpa_intb_gemm": "0"
+      },
+      "num_hidden_layers": 5,
+      "num_key_value_heads": 2,
+      "head_size": 128,
+      "block_size": 8,
+      "num_draft_tokens": 7,
+      "selector_top_k": 8,
+      "mask_token_id": 990,
+      "sliding_window": 1024,
+      "main_aux_hidden_states": "aux_hidden_states",
+      "inputs": {
+        "aux_hidden_states": "aux_hidden_states",
+        "input_ids": "input_ids",
+        "q_row_map": "q_row_map",
+        "qkv_row_map": "qkv_row_map",
+        "block_row_index": "block_row_index",
+        "cumulative_sequence_lengths": "cumulative_sequence_lengths",
+        "past_sequence_lengths": "past_sequence_lengths",
+        "block_table": "block_table",
+        "attention_metadata": "attention_metadata",
+        "past_key_names": "past_key_values.%d.key",
+        "past_value_names": "past_key_values.%d.value",
+        "anchor_row_index": "anchor_row_index"
+      },
+      "outputs": {
+        "candidate_ids": "draft_candidate_ids",
+        "scores": "draft_scores",
+        "present_key_names": "present.%d.key",
+        "present_value_names": "present.%d.value"
+      },
+      "aux_hidden_state_layers": [
+        1,
+        18,
+        35,
+        51,
+        68,
+        85
+      ]
+    }
+  },
+  "search": {
+    "do_sample": false,
+    "max_length": 135160,
+    "min_length": 0,
+    "num_beams": 1,
+    "num_return_sequences": 1,
+    "repetition_penalty": 1.0,
+    "no_repeat_ngram_size": 0,
+    "past_present_share_buffer": true
+  },
+  "speculative": {
+    "max_draft_tokens": 7
+  }
+}
