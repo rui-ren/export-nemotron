@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.gguf
+*.f32
+*.npz
+*.so
+*.data

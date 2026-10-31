@@ -1,5 +1,9 @@
 # nemotron_ops
 
+For the experimental Lightning Q4_K_M ONNX exporter and CUDA operators, see
+[`q4_k_m_lightning`](q4_k_m_lightning/README.md). GPU qualification and ONNX
+benchmarking are pending; the existing Bolt kernels are unchanged.
+
 CUDA custom-op library for **NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB** (Mamba2 + attention + LatentMoE hybrid) decode on
 ONNX Runtime's CUDA EP. Same layout as `qwen38-flash-ops`: plain ORT custom-op ABI, `sm_90`, ops run on the provider's compute
 stream (CUDA-graph capturable), one shared library, domain `bolt`.
