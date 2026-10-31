@@ -1,0 +1,79 @@
+{
+  "format": "ONNX",
+  "preset": "Q4_K_M",
+  "target_only": true,
+  "package_location": "artifacts/genai-q4km-onnx",
+  "external_weight_bytes": 24489993984,
+  "external_weight_gb": 24.489993984,
+  "external_weight_gib": 22.80808424949646,
+  "graph_sha256": "330c3aadc637673f27d816530cce047cb55c6d3ce9742f01d69139728dfa1ab5",
+  "external_weights_sha256": "6c7ebee366951081863c780a588d7a87caf3c438d6ec0572618a0903f9986d5a",
+  "library_sha256": "ba64653d15c7a6c4ab6482ba9b5aa7704664c13c5fb78eb3dd573549e27d3fd7",
+  "bf16_kernel_source_revision": "a77d0522eab5536d6c980c361f8aa93f8a50389b",
+  "offline_quantizer_revision": "5047748f114564fcf271e6a648f60e2d2eae6264",
+  "runtime_requires_gguf": false,
+  "runtime_requires_llama_cpp": false,
+  "operators": {
+    "Embedding": 1,
+    "Linear": 117,
+    "MoE": 23
+  },
+  "quantized_matrices_bitwise_checked": 164,
+  "retained_initializers_bitwise_checked": 237,
+  "native_decoder_abi_unchanged": true,
+  "host_device_decoder_cpu_samples": {
+    "complete": true,
+    "execution": "CPU only; no CUDA context or GPU work",
+    "matrices_sampled": 164,
+    "rows_per_matrix": 3,
+    "fp32_elements_bitwise_equal": 1458240,
+    "formats": {
+      "Q8_0": 25,
+      "Q5_0": 110,
+      "Q4_K": 29
+    },
+    "gpu_execution_validated": false
+  },
+  "cpu_regression_tests_passed": 12,
+  "cuda_compilation_passed": true,
+  "ort_domain_registration_passed": true,
+  "cuda_device_execution_validated": false,
+  "full_model_qualified": false,
+  "onnx_benchmarked": false,
+  "onnx_prefill_tokens_per_second": null,
+  "onnx_decode_tokens_per_second": null,
+  "onnx_peak_gpu_gib": null,
+  "gpu_status": "Paused by explicit user request; do not launch or automatically queue GPU work.",
+  "next_gates": [
+    "Wait for explicit GPU-use release.",
+    "Run CUDA ONNX operator/reference tests and memory/race sanitizers.",
+    "Qualify full-decoder logits, greedy generation and repeated-state reset; report quantization drift.",
+    "Benchmark native ONNX GenAI at 512/32768 input with matched BF16 controls and resource guards."
+  ],
+  "evidence_sha256": {
+    "evidence/q4km-onnx-weight-audit.json": "6f842c615c43108ffdf9b37864281397432eb1827041f88c4afed5cea949fa7d",
+    "evidence/q4km-onnx-cpp-real-blocks.json": "e0e5026d738bd2253b1c35bdce48cc3acfb78f5c0e5cea67a75ea2f8385d841b"
+  },
+  "source_sha256": {
+    "audit_onnx.py": "9c4ca6ce4b1122413a2ea455c4292db57c79772aba3d4ca5f5d19221eb565acd",
+    "audit_source.py": "680b8b875afde5fdc04c3e7f75f2cc8026cced43bd8505c64d0ba55b1cdc345b",
+    "cuda/CMakeLists.txt": "9d3818eb359c2c8ed72dae604c89a591e4865f3e474a1304f685ac3e3c4a3633",
+    "cuda/q4_ops.cu": "9a83e617452f4907d6d0402667e5805dd1b356017e03ad12fdee4a4e810c8b4a",
+    "cuda/quant_blocks.cuh": "88bb9f9166719b9da5dad1c547d48425e5b7596acb6a10a0f5d41823d7afe79a",
+    "cuda/test_blocks.cpp": "30e24052d8119930f67d3b32c0c899c390ee26533ef73a59b5f44639a9ba1750",
+    "export.py": "dc4e1aedb5e4ffd8f747a3ff80091706732b3c46a533ae466b43d7f3bdf5b23e",
+    "onnx_export.py": "6620b6cfa649c0cb320082aa8a79ae9601e29348704d2912245738d08323b443",
+    "probe.cpp": "e569d80e61bb2c1f75ebb41c91d16aedc1669fe48b381467f1bcdfe9e1762601",
+    "test_export.py": "bf1e15cf57038b95c3786a92a87f80f265185348e8d1a13d5a72b5c356b15172",
+    "test_onnx.py": "b63f6f34a4bc69543846e5ff120e0d6196cdb8c8c17be41eddcc65e8bb154289",
+    "validate.py": "d62378965bd1a563a1e79ffb21ecb4ad522c19720c9b238f7d18c5d191e9d506",
+    "validate_model.py": "95f82e0373425a735c9615d0355f216254cb89bf6d81aef4b1fa0f9da494e10e",
+    "validate_ops.py": "71ea2185493bf65dc5049f683b73d67fac811fd1df0ea5283f35c86c3f803bee"
+  },
+  "limitation": "CPU/structural checks and a successful build do not establish CUDA correctness, quality or performance.",
+  "qualification_scripts_prepared": [
+    "validate_ops.py",
+    "validate_model.py"
+  ],
+  "ort_domain_registration_gpu_visibility": "All GPUs hidden; no model/session/device execution"
+}

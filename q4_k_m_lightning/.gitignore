@@ -3,3 +3,5 @@ __pycache__/
 *.gguf
 *.f32
 *.npz
+*.so
+*.data

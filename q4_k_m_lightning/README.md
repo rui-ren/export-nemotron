@@ -1,148 +1,150 @@
-# Experimental reference Q4_K_M quantization
+# Lightning Q4_K_M ONNX workflow (not yet GPU-qualified)
 
-This exports `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16` through the
-**pinned upstream llama.cpp Q4_K_M preset**, with MTP excluded. It is a GGUF
-reference artifact, **not an ONNX graph or an optimized native GenAI package**.
-The existing BF16 exports, CUDA libraries and default runtime are unchanged.
+The deliverable is an **ONNX Runtime GenAI package** for
+`nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16`, not a GGUF inference model.
+It contains `model.onnx`, mixed quantized external weights, a CUDA custom-op
+library, tokenizer files and `genai_config.json`. Its runtime does **not** link
+to llama.cpp or read GGUF files.
 
-Do not pass these packed weights to `W4Linear` or `MoeDecode`. Their symmetric
-INT4 RTN packing is incompatible with GGML Q4_K/Q5_0/Q8_0 blocks. ONNX deployment
-needs separate compatible operators, tensor-layout conversion and numerical
-qualification; this folder does not claim to implement that runtime.
+**Status:** the actual ONNX package has been exported, structurally audited and
+its CUDA library compiled. **CUDA execution, full-model qualification and ONNX
+benchmarks have not run.** GPU use is paused at the user's request while other
+tests run. Do not treat compilation or CPU checks as GPU qualification.
+[`ONNX_STATUS.json`](ONNX_STATUS.json) records the current evidence and blockers.
 
-## Important Lightning shape limitation
+The existing BF16 artifacts and default runtime are unchanged. This first
+ONNX implementation is target-only, without MTP. It is an experimental
+correctness-first path, not a claim of faster decode or accepted model quality.
 
-Q4_K uses blocks of 256 weights. Lightning's expert input widths **2688 and
-1856 are not divisible by 256**. The stock quantizer therefore falls back from
-Q4_K to Q5_0 and from Q6_K to Q8_0 where required. We do not silently pad the
-matrices, replace the preset, or label uniform RTN as Q4_K_M.
+## What is actually quantized
 
-The measured full-target artifact is **24,515,129,024 bytes = 24.515 GB =
-22.831 GiB**, rather than the earlier estimated 20-22 GB:
+All **164 matrices** selected by the pinned stock Q4_K_M preset are stored as
+native packed UINT8 blocks in ONNX:
 
-| Actual tensor type | Tensors | Weight bytes, decimal GB |
-| --- | --- | --- |
-| Q5_0 | 110 | 16.336320 |
-| Q8_0 | 25 | 7.955856 |
-| Q4_K | 29 | 0.179601 |
-| F32 | 237 | 0.035456 |
+| Block type | Matrices |
+| --- | --- |
+| Q5_0 | 110 |
+| Q8_0 | 25 |
+| Q4_K | 29 |
 
-134 of 401 tensors need shape fallbacks. The file's Q4_K_M label describes the
-upstream preset, not a guarantee that every matrix is four-bit. Actual weights
-average about **6.21 bits/parameter**, including the retained precision mix.
-The embedding is Q5_0 and output head is Q8_0 under the stock preset; this
-is not the earlier proposed expert-only policy with BF16 embedding/head.
+Lightning's expert widths 2688/1856 are not divisible by the 256-element K-quant
+block. Stock upstream policy therefore falls back to Q5_0/Q8_0 for 134 matrices.
+The packing is not symmetric block-32 RTN and must not be reinterpreted as such.
+The 237 nonquantized initializers retain the original ONNX bytes and precision.
+The converter's Q/K row permutation is reversed before packing ONNX weights.
 
-This first experiment uses no importance matrix or calibration data. An
-importance-weighted run is a distinct follow-up, not implied by this result.
+The created external ONNX weights are **24,489,993,984 bytes = 24.490 GB =
+22.808 GiB**. This is a disk-weight size, **not measured GPU allocation**.
+The 24.515 GB file and 23.604 GiB GPU result in the historical reference report
+belong to a different runtime; they are not ONNX results.
 
-## Reproduce
+Custom domain `lightning_q4` provides:
 
-Use the existing PyTorch/safetensors/NumPy/Transformers environment and a CUDA
-toolchain; do not replace the qualified ORT installation.
-The converter also needs the pinned upstream conversion requirements; the
-optional GPU validation script uses `nvidia-ml-py` (`import pynvml`).
-The reference source revision is
+| Operator | Execution |
+| --- | --- |
+| `Embedding` | Dequantize only requested embedding rows to BF16 |
+| `Linear` | Temporarily dequantize one matrix, then source-row BF16 cuBLAS |
+| `MoE` | Group routes, temporarily dequantize one expert at a time, run source-row-configured BF16 cohort projections |
+| `Dequantize` | Diagnostic operator for block-format qualification |
+
+The graph replaces one embedding, 117 dense/head projections and 23 MoE nodes.
+Mamba, attention, normalization, routing, recurrent-state ownership and cache
+contracts remain on the existing BF16 implementation. No full resident BF16
+expert copy is created. Projection/activation rounding and FP32 route reduction
+are retained. Host route-count synchronization and temporary weight expansion
+may cost performance; only actual ONNX benchmarks can establish the trade-off.
+
+## Build and export
+
+Use the qualified H100/ORT environment. The shared library compiles the BF16
+kernel snapshot together with the new operators, registering both domains
+through one `RegisterCustomOps` entry point.
+Set `BF16_SOURCE_DIR` to `bf16_cuda_lightning/` from commit
+`a77d0522eab5536d6c980c361f8aa93f8a50389b`
+([BF16 PR](https://github.com/rui-ren/export-nemotron/pull/2)).
+
+```bash
+cmake -S q4_k_m_lightning/cuda -B build/lightning-q4-onnx \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DORT_INCLUDE_DIR=/path/to/onnxruntime/session/headers \
+  -DBF16_SOURCE_DIR=/path/to/qualified/bf16_cuda_lightning
+cmake --build build/lightning-q4-onnx --parallel 2
+```
+
+`onnx_export.py` starts with the original safetensors checkpoint and the
+qualified chunked BF16 ONNX package. The pinned upstream quantizer is an
+**offline weight-preparation tool only**; its staging files are not included
+in the runtime package. Use clean llama.cpp revision
 `5047748f114564fcf271e6a648f60e2d2eae6264`.
+The original BF16 checkpoint and quantizer staging need additional disk space.
 
 ```bash
-git clone https://github.com/ggml-org/llama.cpp.git /path/to/llama-q4km
-git -C /path/to/llama-q4km checkout 5047748f114564fcf271e6a648f60e2d2eae6264
-cmake -S /path/to/llama-q4km -B /path/to/build-llama-q4km \
-  -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON \
-  -DCMAKE_CUDA_ARCHITECTURES=90 -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_SERVER=OFF
-cmake --build /path/to/build-llama-q4km --target llama-quantize --parallel 8
-
-python q4_k_m_lightning/export.py --model-dir /models/lightning-bf16 \
-  --llama-source /path/to/llama-q4km \
-  --quantizer /path/to/build-llama-q4km/bin/llama-quantize \
-  --out /models/lightning-q4km
+python q4_k_m_lightning/onnx_export.py \
+  --model-dir /models/lightning-bf16 \
+  --bf16-package /models/genai-chunked-device \
+  --llama-source /path/to/pinned/llama.cpp \
+  --quantizer /path/to/llama-quantize \
+  --work-dir /models/quantizer-staging \
+  --custom-library build/lightning-q4-onnx/lib/liblightning_q4_ops.so \
+  --out /models/genai-q4km-onnx
 ```
 
-Destinations must be new or empty; completed audit evidence is never overwritten.
-The script requires the clean pinned source. Quantize directly from original
-BF16, never from the earlier RTN/another lossy export.
-The retained BF16 GGUF needs approximately 63.18 GB of disk in addition to the
-quantized file. This is staging/reference storage, not a claim about GPU memory.
+Destinations must be new. `--quantized-reference` optionally reuses the already
+audited offline weight cache instead of repeating quantization. It is never a
+GenAI input. The output configuration retains the original **262144** context
+limit, not the offline converter's larger metadata value.
 
-`quantization.json` records SHA256 hashes, actual type/byte counts, per-tensor
-weight errors and complete finite-value/shape checks. Weight error is not an
-accuracy score. `--audit-only` can audit existing files with the exact output
-names `target-bf16.gguf` and `target-Q4_K_M.gguf`.
+The machine-local package is
+`/home/lightning/export-onnx/artifacts/genai-q4km-onnx`.
+It remains explicitly marked `qualified: false` and `benchmarked: false`.
 
-Audit every target tensor against the original checkpoint:
+## CPU checks that have passed
+
+- All 164 packed ONNX matrices match the quantized reference bits, accounting
+  for independently checked Q/K row restoration.
+- All 237 retained initializers match the qualified BF16 ONNX bytes.
+- Original graph inputs/outputs and their types/shapes are unchanged.
+- The actual shared host/device C++ decoder matches reference FP32 bits for
+  synthetic blocks and **1,458,240 real values**, sampling all 164 matrices.
+- **12 CPU regression tests** pass, including incompatible route-semantics
+  rejection. Python compilation and the CUDA build pass.
+- The built library registers both custom-op domains on ORT 1.32.0.
+  Registration alone does not execute or qualify CUDA kernels.
 
 ```bash
-python q4_k_m_lightning/audit_source.py --model-dir /models/lightning-bf16 \
-  --gguf /models/lightning-q4km/target-bf16.gguf \
-  --llama-source /path/to/llama-q4km --out source-audit.json
+c++ -O3 -ffp-contract=off -std=c++17 -fPIC -shared \
+  -I/usr/local/cuda/include q4_k_m_lightning/cuda/test_blocks.cpp \
+  -o /tmp/libq4_block_test.so
+Q4_BLOCK_TEST_LIBRARY=/tmp/libq4_block_test.so \
+PYTHONPATH=/path/to/pinned/llama.cpp/gguf-py \
+python -m unittest discover -s q4_k_m_lightning -p 'test_*.py' -v
 ```
 
-This checks all 6,243 source target tensors against 401 GGUF tensors,
-including expert stacking, FP32 negative exponential and the converter's
-per-head Q/K row permutation. It does not confuse representation changes with
-unchanged raw bytes. The upstream converter declares a 1,048,576-token context;
-the original checkpoint declares **262,144**. Do not infer extra context support
-from the GGUF metadata. The bounded probe below uses only a 2048-token context.
+`audit_onnx.py` independently checks every packed/retained initializer against
+the source packages and validates the unchanged decoder ABI. Its offline
+reference dependency is not a runtime dependency.
 
-## Bounded inference and quality checks
+## Pending GPU gates -- do not run during the user's GPU hold
 
-Build the small probe against the pinned reference runtime:
+The prepared `validate_ops.py` exercises all three formats, embedding rows,
+decode/multirow dense projections, heterogeneous/shared/singleton expert
+cohorts and invalid IDs. It compares against dequantized BF16 ONNX operators,
+not an alternate inference engine. It requires the existing PyTorch/ORT
+DLPack-enabled CUDA environment, `nvidia-ml-py`, and the pinned offline Python
+block reader. It fails instead of skipping when a GPU is busy.
 
-```bash
-c++ -O2 -std=c++17 \
-  -I /path/to/llama-q4km/include -I /path/to/llama-q4km/ggml/include \
-  q4_k_m_lightning/probe.cpp -L /path/to/build-llama-q4km/bin \
-  -Wl,-rpath,/path/to/build-llama-q4km/bin \
-  -lllama -lggml -lggml-base -o /path/to/lightning-q4km-probe
+After GPU use is explicitly released, run operator tests and CUDA sanitizers;
+then use `validate_model.py` to qualify full-model finite logits, generation,
+reset consistency and quantization drift against the native BF16 ONNX model.
+It runs both models in isolated child processes and retains independent NVML
+samples plus raw final-prompt logits. Only then benchmark
+native ONNX Runtime GenAI at 512 and 32768 input tokens using the existing
+`export-onnx-lightning/genai/benchmark.py` harness, matched BF16 controls,
+no MTP and repeated requests. Exclude the first prediction from decode rate.
+Retain the >=70 GiB idle-start and >=2 GiB running-headroom/unique-owner guards.
 
-CUDA_VISIBLE_DEVICES=0 python q4_k_m_lightning/validate.py \
-  --baseline /models/lightning-q4km/target-bf16.gguf \
-  --model /models/lightning-q4km/target-Q4_K_M.gguf \
-  --probe /path/to/lightning-q4km-probe \
-  --reference /path/to/independent-hf-capture.npz \
-  --tokenizer-dir /models/lightning-bf16 --gpu-index 0 --out q4km-validation
-```
+No automatic GPU worker, watcher or queued benchmark is started by this code.
+No ONNX prefill/decode token/s or GPU-memory value is available yet.
 
-The probe compares identical token IDs, captures every prompt-position logit
-and generates up to 32 greedy tokens, with normal EOS. It reloads BF16 and
-quantized models sequentially and clears recurrent/KV state between prompts.
-The monitor requires an initially idle GPU with >=70 GiB free and retains
-all >=2 GiB headroom/unique-owner samples. Output directories must be new.
-
-The captured five histories are **four unique prompts plus one repeat**,
-129 total prompt positions. Same-engine BF16/quantized top-1 agreement ranges
-from 75.0% to 91.7%; examples generate coherent recursion explanations and
-prime-number lists. The repeat verifies state-reset consistency.
-That is a smoke/drift check, **not representative accuracy acceptance**.
-The reference runtime's BF16 arithmetic itself differs from native HF, so the
-report separates HF-to-reference-runtime drift from quantization drift.
-Neither exact BF16 parity nor a throughput improvement is claimed.
-
-Reference runtime peak GPU allocation was **59.184 GiB for BF16** and
-**23.604 GiB for Q4_K_M** in the bounded probe. These are not ONNX GenAI
-memory/performance measurements and do not include a 32K KV workload.
-Keep BF16 as the deployment baseline until representative reasoning/code and
-long-context quality checks and compatible ONNX kernels are qualified.
-
-Machine-local outputs:
-
-- `artifacts/q4km-lightning/`: BF16 staging GGUF, Q4_K_M GGUF and weight audit.
-- `evidence/q4km-source-audit.json`: full source-conversion checks.
-- `evidence/q4km-native-validation-namespace/`: final raw logits, generated IDs/text
-  and resource samples. Earlier captures, including the rejected
-  container-PID/host-PID comparison, remain separate.
-
-[`RESULTS.json`](RESULTS.json) records the artifact hashes, tensor mix and
-bounded comparison results without bundling model weights or raw prompt data.
-All 401 tensors passed finite-value/shape checks, all 6,243 source tensors
-passed conversion checks, and all 237 retained tensors passed a separate
-byte-for-byte check. Six focused audit tests pass. Both model runs pass exact
-repeat-logit/generation checks and all 215 final GPU guard samples pass.
-
-Focused audit tests need no CUDA/checkpoint:
-
-```bash
-PYTHONPATH=/path/to/llama-q4km/gguf-py \
-python -m unittest discover -s q4_k_m_lightning -p test_export.py -v
-```
+The earlier GGUF-only reference experiment is preserved separately in
+[`REFERENCE_GGUF.md`](REFERENCE_GGUF.md) and [`RESULTS.json`](RESULTS.json).
